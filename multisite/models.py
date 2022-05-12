@@ -139,7 +139,7 @@ class NotCanonicalAliasManager(models.Manager):
 
     def get_queryset(self):
         qset = super(NotCanonicalAliasManager, self).get_queryset()
-        return qset.filter(is_canonical__isnull=True)
+        return qset.filter(is_canonical=False)
 
 
 def validate_true_or_none(value):
