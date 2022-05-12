@@ -1,20 +1,17 @@
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
+
+import operator
+from functools import reduce
 
 import django
-import operator
-
-from functools import reduce
-from six import python_2_unicode_compatible
-from six.moves import range
-
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_ipv4_address
 from django.db import connections, models, router
 from django.db.models import Q
-from django.db.models.signals import pre_save, post_save
-from django.db.models.signals import post_migrate
+from django.db.models.signals import post_migrate, post_save, pre_save
+from six import python_2_unicode_compatible
+from six.moves import range
 
 from .hacks import use_framework_for_site_cache
 
@@ -23,7 +20,7 @@ if django.VERSION < (2,):
 else:
     from django.utils.translation import gettext_lazy as _
 
-_site_domain = Site._meta.get_field('domain')
+_site_domain = Site._meta.get_field("domain")
 
 use_framework_for_site_cache()
 
@@ -32,7 +29,7 @@ class AliasManager(models.Manager):
     """Manager for all Aliases."""
 
     def get_queryset(self):
-        return super(AliasManager, self).get_queryset().select_related('site')
+        return super(AliasManager, self).get_queryset().select_related("site")
 
     def resolve(self, host, port=None):
         """
@@ -77,21 +74,21 @@ class AliasManager(models.Manager):
          '*:80', '*']
         """
         if not host:
-            raise ValueError(u"Invalid host: %s" % host)
+            raise ValueError("Invalid host: %s" % host)
 
         try:
             validate_ipv4_address(host)
             bits = [host]
         except ValidationError:
             # Not an IP address
-            bits = host.split('.')
+            bits = host.split(".")
 
         result = []
         for i in range(0, (len(bits) + 1)):
             if i == 0:
-                host = '.'.join(bits[i:])
+                host = ".".join(bits[i:])
             else:
-                host = '.'.join(['*'] + bits[i:])
+                host = ".".join(["*"] + bits[i:])
             if port:
                 result.append("%s:%s" % (host, port))
             result.append(host)
@@ -115,7 +112,7 @@ class CanonicalAliasManager(models.Manager):
             Alias.canonical.sync_many(site__domain='example.com')
         """
         aliases = self.get_queryset().filter(*args, **kwargs)
-        for alias in aliases.select_related('site'):
+        for alias in aliases.select_related("site"):
             domain = alias.site.domain
             if domain and alias.domain != domain:
                 alias.domain = domain
@@ -125,9 +122,9 @@ class CanonicalAliasManager(models.Manager):
         """Create missing canonical Alias objects based on Site.domain."""
         aliases = self.get_queryset()
         try:
-            sites = self.model._meta.get_field('site').remote_field.model
+            sites = self.model._meta.get_field("site").remote_field.model
         except AttributeError:
-            sites = self.model._meta.get_field('site').rel.to
+            sites = self.model._meta.get_field("site").rel.to
         for site in sites.objects.exclude(aliases__in=aliases):
             Alias.sync(site=site)
 
@@ -148,7 +145,7 @@ class NotCanonicalAliasManager(models.Manager):
 def validate_true_or_none(value):
     """Raises ValidationError if value is not True or None."""
     if value not in (True, None):
-        raise ValidationError(u'%r must be True or None' % value)
+        raise ValidationError("%r must be True or None" % value)
 
 
 @python_2_unicode_compatible
@@ -162,24 +159,23 @@ class Alias(models.Model):
     """
 
     domain = type(_site_domain)(
-        _('domain name'),
+        _("domain name"),
         max_length=_site_domain.max_length,
         unique=True,
         help_text=_('Either "domain" or "domain:port"'),
     )
-    site = models.ForeignKey(
-        Site, related_name='aliases', on_delete=models.CASCADE
-    )
-    is_canonical = models.NullBooleanField(
-        _('is canonical?'),
-        default=None, editable=False,
+    site = models.ForeignKey(Site, related_name="aliases", on_delete=models.CASCADE)
+    is_canonical = models.BooleanField(
+        _("is canonical?"),
+        default=False,
+        editable=False,
         validators=[validate_true_or_none],
-        help_text=_('Does this domain name match the one in site?'),
+        help_text=_("Does this domain name match the one in site?"),
     )
     redirect_to_canonical = models.BooleanField(
-        _('redirect to canonical?'),
+        _("redirect to canonical?"),
         default=True,
-        help_text=_('Should this domain name redirect to the one in site?'),
+        help_text=_("Should this domain name redirect to the one in site?"),
     )
 
     objects = AliasManager()
@@ -187,14 +183,14 @@ class Alias(models.Model):
     aliases = NotCanonicalAliasManager()
 
     class Meta:
-        unique_together = [('is_canonical', 'site')]
-        verbose_name_plural = _('aliases')
+        unique_together = [("is_canonical", "site")]
+        verbose_name_plural = _("aliases")
 
     def __str__(self):
         return "%s -> %s" % (self.domain, self.site.domain)
 
     def __repr__(self):
-        return '<Alias: %s>' % str(self)
+        return "<Alias: %s>" % str(self)
 
     def save_base(self, *args, **kwargs):
         self.full_clean()
@@ -204,9 +200,7 @@ class Alias(models.Model):
         # on SiteAdmin will be saved (and it's clean methods run before
         # the Site is saved)
         if self.is_canonical and self.domain != self.site.domain:
-            raise ValidationError(
-                {'domain': ['Does not match %r' % self.site]}
-            )
+            raise ValidationError({"domain": ["Does not match %r" % self.site]})
         super(Alias, self).save_base(*args, **kwargs)
 
     def validate_unique(self, exclude=None):
@@ -216,15 +210,15 @@ class Alias(models.Model):
         except ValidationError as e:
             errors = e.update_error_dict(errors)
 
-        if exclude is not None and 'domain' not in exclude:
+        if exclude is not None and "domain" not in exclude:
             # Ensure domain is unique, insensitive to case
-            field_name = 'domain'
-            field_error = self.unique_error_message(self.__class__,
-                                                    (field_name,))
-            if field_name not in errors or \
-               str(field_error) not in [str(err) for err in errors[field_name]]:
+            field_name = "domain"
+            field_error = self.unique_error_message(self.__class__, (field_name,))
+            if field_name not in errors or str(field_error) not in [
+                str(err) for err in errors[field_name]
+            ]:
                 qset = self.__class__.objects.filter(
-                    **{field_name + '__iexact': getattr(self, field_name)}
+                    **{field_name + "__iexact": getattr(self, field_name)}
                 )
                 if self.pk is not None:
                     qset = qset.exclude(pk=self.pk)
@@ -239,7 +233,7 @@ class Alias(models.Model):
         """Delete associated Alias object for ``site``, if domain is blank."""
 
         if site.domain:
-            raise ValueError('%r has a domain' % site)
+            raise ValueError("%r has a domain" % site)
 
         # Remove canonical Alias, if no non-canonical aliases exist.
         try:
@@ -250,8 +244,8 @@ class Alias(models.Model):
         else:
             if not alias.is_canonical:
                 raise cls.MultipleObjectsReturned(
-                    'Other %s still exist for %r' %
-                    (cls._meta.verbose_name_plural.capitalize(), site)
+                    "Other %s still exist for %r"
+                    % (cls._meta.verbose_name_plural.capitalize(), site)
                 )
             alias.delete()
 
@@ -268,13 +262,11 @@ class Alias(models.Model):
             return
 
         if force_insert:
-            alias = cls.objects.create(site=site, is_canonical=True,
-                                       domain=domain)
+            alias = cls.objects.create(site=site, is_canonical=True, domain=domain)
 
         else:
             alias, created = cls.objects.get_or_create(
-                site=site, is_canonical=True,
-                defaults={'domain': domain}
+                site=site, is_canonical=True, defaults={"domain": domain}
             )
             if not created and alias.domain != domain:
                 alias.site = site
@@ -299,8 +291,7 @@ class Alias(models.Model):
             cls.sync(site=instance)
 
     @classmethod
-    def site_created_hook(cls, sender, instance, raw, created,
-                          *args, **kwargs):
+    def site_created_hook(cls, sender, instance, raw, created, *args, **kwargs):
         """Creates canonical Alias object for a new Site."""
         if raw or not created:
             return
