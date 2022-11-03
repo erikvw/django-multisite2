@@ -3,22 +3,15 @@ from __future__ import absolute_import, unicode_literals
 import operator
 from functools import reduce
 
-import django
 from django.contrib.sites.models import Site
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_ipv4_address
 from django.db import connections, models, router
 from django.db.models import Q
 from django.db.models.signals import post_migrate, post_save, pre_save
-from six import python_2_unicode_compatible
-from six.moves import range
+from django.utils.translation import gettext_lazy as _
 
 from .hacks import use_framework_for_site_cache
-
-if django.VERSION < (2,):
-    from django.utils.translation import ugettext_lazy as _
-else:
-    from django.utils.translation import gettext_lazy as _
 
 _site_domain = Site._meta.get_field("domain")
 
@@ -29,7 +22,7 @@ class AliasManager(models.Manager):
     """Manager for all Aliases."""
 
     def get_queryset(self):
-        return super(AliasManager, self).get_queryset().select_related("site")
+        return super().get_queryset().select_related("site")
 
     def resolve(self, host, port=None):
         """
@@ -99,7 +92,7 @@ class CanonicalAliasManager(models.Manager):
     """Manager for Alias objects where is_canonical is True."""
 
     def get_queryset(self):
-        qset = super(CanonicalAliasManager, self).get_queryset()
+        qset = super().get_queryset()
         return qset.filter(is_canonical=True)
 
     def sync_many(self, *args, **kwargs):
@@ -124,7 +117,7 @@ class CanonicalAliasManager(models.Manager):
         try:
             sites = self.model._meta.get_field("site").remote_field.model
         except AttributeError:
-            sites = self.model._meta.get_field("site").rel.to
+            sites = self.model._meta.get_field("site").related_model
         for site in sites.objects.exclude(aliases__in=aliases):
             Alias.sync(site=site)
 
@@ -138,7 +131,7 @@ class NotCanonicalAliasManager(models.Manager):
     """Manager for Aliases where is_canonical is None."""
 
     def get_queryset(self):
-        qset = super(NotCanonicalAliasManager, self).get_queryset()
+        qset = super().get_queryset()
         return qset.filter(is_canonical=False)
 
 
@@ -148,7 +141,6 @@ def validate_true_or_none(value):
         raise ValidationError("%r must be True or None" % value)
 
 
-@python_2_unicode_compatible
 class Alias(models.Model):
     """
     Model for domain-name aliases for Site objects.
@@ -201,12 +193,12 @@ class Alias(models.Model):
         # the Site is saved)
         if self.is_canonical and self.domain != self.site.domain:
             raise ValidationError({"domain": ["Does not match %r" % self.site]})
-        super(Alias, self).save_base(*args, **kwargs)
+        super().save_base(*args, **kwargs)
 
     def validate_unique(self, exclude=None):
         errors = {}
         try:
-            super(Alias, self).validate_unique(exclude=exclude)
+            super().validate_unique(exclude=exclude)
         except ValidationError as e:
             errors = e.update_error_dict(errors)
 

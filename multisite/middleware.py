@@ -1,70 +1,59 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
 import os
 import tempfile
+
 try:
     from urlparse import urlsplit, urlunsplit
 except ImportError:
     from urllib.parse import urlsplit, urlunsplit
 
+from hashlib import md5 as md5_constructor
+
 import django
 from django.conf import settings
-from django.contrib.sites.models import Site, SITE_CACHE
-from django.core.exceptions import DisallowedHost
+from django.contrib.sites.models import SITE_CACHE, Site
 from django.core import mail
-
 from django.core.cache import caches
-
-try:
-    # Django > 1.10 uses MiddlewareMixin
-    from django.utils.deprecation import MiddlewareMixin
-except ImportError:
-    MiddlewareMixin = object
-
-from django.core.exceptions import ImproperlyConfigured
-
-try:
-    from django.urls import get_callable
-except ImportError:
-    # Django < 1.10 compatibility
-    from django.core.urlresolvers import get_callable
-
-from django.db.models.signals import pre_save, post_delete, post_init
+from django.core.exceptions import DisallowedHost, ImproperlyConfigured
+from django.db.models.signals import post_delete, post_init, pre_save
 from django.http import Http404, HttpResponsePermanentRedirect
-
-from hashlib import md5 as md5_constructor
+from django.urls import get_callable
 
 from .models import Alias
 
 
-class DynamicSiteMiddleware(MiddlewareMixin):
-    def __init__(self, *args, **kwargs):
-        super(DynamicSiteMiddleware, self).__init__(*args, **kwargs)
-        if not hasattr(settings.SITE_ID, 'set'):
-            raise TypeError('Invalid type for settings.SITE_ID: %s' %
-                            type(settings.SITE_ID).__name__)
+class DynamicSiteMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        if not hasattr(settings.SITE_ID, "set"):
+            raise TypeError(
+                "Invalid type for settings.SITE_ID: %s"
+                % type(settings.SITE_ID).__name__
+            )
 
-        self.cache_alias = getattr(settings, 'CACHE_MULTISITE_ALIAS',
-                                   'default')
+        self.cache_alias = getattr(settings, "CACHE_MULTISITE_ALIAS", "default")
         self.key_prefix = getattr(
             settings,
-            'CACHE_MULTISITE_KEY_PREFIX',
-            settings.CACHES[self.cache_alias].get('KEY_PREFIX', '')
+            "CACHE_MULTISITE_KEY_PREFIX",
+            settings.CACHES[self.cache_alias].get("KEY_PREFIX", ""),
         )
 
         self.cache = caches[self.cache_alias]
-        post_init.connect(self.site_domain_cache_hook, sender=Site,
-                          dispatch_uid='multisite_post_init')
+        post_init.connect(
+            self.site_domain_cache_hook, sender=Site, dispatch_uid="multisite_post_init"
+        )
         pre_save.connect(self.site_domain_changed_hook, sender=Site)
         post_delete.connect(self.site_deleted_hook, sender=Site)
 
+    def __call__(self, request):
+        return self.get_response(request)
+
     def get_cache_key(self, netloc):
         """Returns a cache key based on ``netloc``."""
-        netloc = md5_constructor(netloc.encode('utf-8'))
-        return 'multisite.alias.%s.%s' % (self.key_prefix,
-                                          netloc.hexdigest())
+        netloc = md5_constructor(netloc.encode("utf-8"))
+        return "multisite.alias.%s.%s" % (self.key_prefix, netloc.hexdigest())
 
     def netloc_parse(self, netloc):
         """
@@ -72,8 +61,8 @@ class DynamicSiteMiddleware(MiddlewareMixin):
 
         If netloc does not have a port number, ``port`` will be None.
         """
-        if ':' in netloc:
-            return netloc.rsplit(':', 1)
+        if ":" in netloc:
+            return netloc.rsplit(":", 1)
         else:
             return netloc, None
 
@@ -88,11 +77,13 @@ class DynamicSiteMiddleware(MiddlewareMixin):
         """
         # When running tests, django.core.mail.outbox exists and
         # netloc == 'testserver'
-        is_testserver = (hasattr(mail, 'outbox') and
-                         netloc in ('testserver', 'adminsite.com'))
+        is_testserver = hasattr(mail, "outbox") and netloc in (
+            "testserver",
+            "adminsite.com",
+        )
         # When using runserver, assume that host will only have one path
         # component. This covers 'localhost' and your machine name.
-        is_local_debug = (settings.DEBUG and len(netloc.split('.')) == 1)
+        is_local_debug = settings.DEBUG and len(netloc.split(".")) == 1
         if is_testserver or is_local_debug:
             try:
                 # Prefer the default SITE_ID
@@ -100,7 +91,7 @@ class DynamicSiteMiddleware(MiddlewareMixin):
                 return Alias.canonical.get(site=site_id)
             except ValueError:
                 # Fallback to the first Site object
-                return Alias.canonical.order_by('site')[0]
+                return Alias.canonical.order_by("site")[0]
 
     def get_alias(self, netloc):
         """
@@ -134,7 +125,7 @@ class DynamicSiteMiddleware(MiddlewareMixin):
         parameters, ``settings.MULTISITE_FALLBACK_KWARGS`` may be a
         dictionary of additional keyword arguments.
         """
-        fallback = getattr(settings, 'MULTISITE_FALLBACK', None)
+        fallback = getattr(settings, "MULTISITE_FALLBACK", None)
         if fallback is None:
             raise Http404
         if callable(fallback):
@@ -142,7 +133,7 @@ class DynamicSiteMiddleware(MiddlewareMixin):
         else:
             try:
                 view = get_callable(fallback)
-                if django.VERSION < (1,8):
+                if django.VERSION < (1, 8):
                     # older django's get_callable falls through on error,
                     # returning the input as output
                     # which notably is definitely not a callable here
@@ -152,12 +143,11 @@ class DynamicSiteMiddleware(MiddlewareMixin):
                 # newer django forces this to be an error, which is tidier.
                 # we rewrite the error to be a bit more helpful to our users.
                 raise ImproperlyConfigured(
-                    'settings.MULTISITE_FALLBACK is not callable: %s' %
-                    fallback
+                    "settings.MULTISITE_FALLBACK is not callable: %s" % fallback
                 )
 
-        kwargs = getattr(settings, 'MULTISITE_FALLBACK_KWARGS', {})
-        if hasattr(view, 'as_view'):
+        kwargs = getattr(settings, "MULTISITE_FALLBACK_KWARGS", {})
+        if hasattr(view, "as_view"):
             # Class-based view
             return view.as_view(**kwargs)(request)
         # View function
@@ -167,9 +157,9 @@ class DynamicSiteMiddleware(MiddlewareMixin):
         if not alias.redirect_to_canonical or alias.is_canonical:
             return
         url = urlsplit(request.build_absolute_uri(request.get_full_path()))
-        url = urlunsplit((url.scheme,
-                          alias.site.domain,
-                          url.path, url.query, url.fragment))
+        url = urlunsplit(
+            (url.scheme, alias.site.domain, url.path, url.query, url.fragment)
+        )
         return HttpResponsePermanentRedirect(url)
 
     def process_request(self, request):
@@ -212,7 +202,7 @@ class DynamicSiteMiddleware(MiddlewareMixin):
         if raw or instance.pk is None:
             return
 
-        original = getattr(instance, '_domain_cache', None)
+        original = getattr(instance, "_domain_cache", None)
         if original != instance.domain:
             self.cache.clear()
 
@@ -221,54 +211,52 @@ class DynamicSiteMiddleware(MiddlewareMixin):
         self.cache.clear()
 
 
-class CookieDomainMiddleware(MiddlewareMixin):
-    def __init__(self, *args, **kwargs):
-        super(CookieDomainMiddleware, self).__init__(*args, **kwargs)
-        self.depth = int(getattr(settings, 'MULTISITE_COOKIE_DOMAIN_DEPTH', 0))
+class CookieDomainMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.depth = int(getattr(settings, "MULTISITE_COOKIE_DOMAIN_DEPTH", 0))
         if self.depth < 0:
             raise ValueError(
-                'Invalid MULTISITE_COOKIE_DOMAIN_DEPTH: {depth!r}'.format(
+                "Invalid MULTISITE_COOKIE_DOMAIN_DEPTH: {depth!r}".format(
                     depth=self.depth
                 )
             )
-        self.psl_cache = getattr(settings,
-                                 'MULTISITE_PUBLIC_SUFFIX_LIST_CACHE',
-                                 None)
+        self.psl_cache = getattr(settings, "MULTISITE_PUBLIC_SUFFIX_LIST_CACHE", None)
         if self.psl_cache is None:
-            self.psl_cache = os.path.join(tempfile.gettempdir(),
-                                          'multisite_tld.dat')
+            self.psl_cache = os.path.join(tempfile.gettempdir(), "multisite_tld.dat")
         self._tldextract = None
 
     def tldextract(self, url):
         import tldextract
+
         if self._tldextract is None:
             self._tldextract = tldextract.TLDExtract(cache_file=self.psl_cache)
         return self._tldextract(url)
 
     def match_cookies(self, request, response):
-        return [c for c in response.cookies.values() if not c['domain']]
+        return [c for c in response.cookies.values() if not c["domain"]]
 
     def process_response(self, request, response):
         matched = self.match_cookies(request=request, response=response)
         if not matched:
-            return response     # No cookies to edit
+            return response  # No cookies to edit
 
         parsed = self.tldextract(request.get_host())
         if not parsed.suffix:
-            return response     # IP address or local path
+            return response  # IP address or local path
         if not parsed.domain:
-            return response     # Only TLD
+            return response  # Only TLD
 
-        subdomains = parsed.subdomain.split('.') if parsed.subdomain else []
+        subdomains = parsed.subdomain.split(".") if parsed.subdomain else []
         if not self.depth:
-            subdomains = ['']
+            subdomains = [""]
         elif len(subdomains) < self.depth:
-            return response     # Not enough subdomain parts
+            return response  # Not enough subdomain parts
         else:
-            subdomains = [''] + subdomains[-self.depth:]
+            subdomains = [""] + subdomains[-self.depth :]
 
-        domain = '.'.join(subdomains + [parsed.domain, parsed.suffix])
+        domain = ".".join(subdomains + [parsed.domain, parsed.suffix])
 
         for morsel in matched:
-            morsel['domain'] = domain
+            morsel["domain"] = domain
         return response

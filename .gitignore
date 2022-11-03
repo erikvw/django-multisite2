@@ -1,3 +1,7 @@
+etc/
+.etc/
+.env
+_version.py
 *.pyc
 *.pyo
 .cache/
@@ -12,6 +16,7 @@ eggs
 parts
 MANIFEST
 multisite/*.egg-info
+django_multisite_edc.egg-info/*
 .coverage
 .tox/
 .pytest_cache/

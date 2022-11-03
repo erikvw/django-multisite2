@@ -1,10 +1,7 @@
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
 from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
-from django.contrib.sites.models import Site
 from django.contrib.sites.admin import SiteAdmin
+from django.contrib.sites.models import Site
 
 from .forms import SiteForm
 from .models import Alias
@@ -12,21 +9,24 @@ from .models import Alias
 
 class AliasAdmin(admin.ModelAdmin):
     """Admin for Alias model."""
-    list_display = ('domain', 'site', 'is_canonical', 'redirect_to_canonical')
-    list_filter = ('is_canonical', 'redirect_to_canonical')
-    ordering = ('domain',)
-    raw_id_fields = ('site',)
-    readonly_fields = ('is_canonical',)
-    search_fields = ('domain',)
+
+    list_display = ("domain", "site", "is_canonical", "redirect_to_canonical")
+    list_filter = ("is_canonical", "redirect_to_canonical")
+    ordering = ("domain",)
+    raw_id_fields = ("site",)
+    readonly_fields = ("is_canonical",)
+    search_fields = ("domain",)
+
 
 admin.site.register(Alias, AliasAdmin)
 
 
 class AliasInline(admin.TabularInline):
     """Inline for Alias model, showing non-canonical aliases."""
+
     model = Alias
     extra = 1
-    ordering = ('domain',)
+    ordering = ("domain",)
 
     def get_queryset(self, request):
         """Returns only non-canonical aliases."""
@@ -35,6 +35,7 @@ class AliasInline(admin.TabularInline):
         if ordering:
             qs = qs.order_by(*ordering)
         return qs
+
 
 # HACK: Monkeypatch AliasInline into SiteAdmin
 SiteAdmin.inlines = type(SiteAdmin.inlines)([AliasInline]) + SiteAdmin.inlines
@@ -51,6 +52,7 @@ class MultisiteChangeList(ChangeList):
     At this point, it's probably fragile, given its reliance on Django
     internals.
     """
+
     def get_filters(self, request, *args, **kwargs):
         """
         This might be considered a fragile function, since it relies on a
@@ -68,7 +70,7 @@ class MultisiteChangeList(ChangeList):
                 try:
                     remote_model = filter_spec.field.remote_field.model
                 except AttributeError:
-                    remote_model = filter_spec.field.rel.to
+                    remote_model = filter_spec.field.related_model
             except AttributeError:
                 new_filter_specs.append(filter_spec)
                 continue
@@ -108,7 +110,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
 
         (As long as you're not a superuser)
         """
-        qs = super(MultisiteModelAdmin, self).queryset(request)
+        qs = super().queryset(request)
         if request.user.is_superuser:
             return qs
 
@@ -120,34 +122,32 @@ class MultisiteModelAdmin(admin.ModelAdmin):
 
         if hasattr(self, "multisite_filter_fields"):
             for field in self.multisite_filter_fields:
-                qkwargs = {
-                    "{field}__in".format(field=field): user_sites
-                }
+                qkwargs = {"{field}__in".format(field=field): user_sites}
                 qs = qs.filter(**qkwargs)
 
         return qs
 
-    def add_view(self, request, form_url='', extra_context=None):
+    def add_view(self, request, form_url="", extra_context=None):
         if self.filter_sites_by_current_object:
             if hasattr(self.model, "site") or hasattr(self.model, "sites"):
                 self.object_sites = tuple()
-        return super(MultisiteModelAdmin, self).add_view(request, form_url,
-                                                         extra_context)
+        return super(MultisiteModelAdmin, self).add_view(
+            request, form_url, extra_context
+        )
 
     def change_view(self, request, object_id, extra_context=None):
         if self.filter_sites_by_current_object:
             object_instance = self.get_object(request, object_id)
             try:
-                self.object_sites = object_instance.sites.values_list(
-                    "pk", flat=True
-                )
+                self.object_sites = object_instance.sites.values_list("pk", flat=True)
             except AttributeError:
                 try:
                     self.object_sites = (object_instance.site.pk,)
                 except AttributeError:
                     pass  # assume the object doesn't belong to a site
-        return super(MultisiteModelAdmin, self).change_view(request, object_id,
-                                                            extra_context)
+        return super(MultisiteModelAdmin, self).change_view(
+            request, object_id, extra_context
+        )
 
     def handle_multisite_foreign_keys(self, db_field, request, **kwargs):
         """
@@ -190,8 +190,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
             user_sites = Site.objects.all()
         else:
             user_sites = request.user.get_profile().sites.all()
-        if self.filter_sites_by_current_object and \
-           hasattr(self, "object_sites"):
+        if self.filter_sites_by_current_object and hasattr(self, "object_sites"):
             sites = user_sites.filter(pk__in=self.object_sites)
         else:
             sites = user_sites
@@ -199,7 +198,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
         try:
             remote_model = db_field.remote_field.model
         except AttributeError:
-            remote_model = db_field.rel.to
+            remote_model = db_field.related_model
         if hasattr(remote_model, "site"):
             kwargs["queryset"] = remote_model._default_manager.filter(
                 site__in=user_sites
@@ -210,8 +209,10 @@ class MultisiteModelAdmin(admin.ModelAdmin):
             )
         if db_field.name == "site" or db_field.name == "sites":
             kwargs["queryset"] = user_sites
-        if hasattr(self, "multisite_indirect_foreign_key_path") and \
-           db_field.name in self.multisite_indirect_foreign_key_path.keys():
+        if (
+            hasattr(self, "multisite_indirect_foreign_key_path")
+            and db_field.name in self.multisite_indirect_foreign_key_path.keys()
+        ):
             fkey = self.multisite_indirect_foreign_key_path[db_field.name]
             kwargs["queryset"] = remote_model._default_manager.filter(
                 **{fkey: user_sites}
@@ -220,15 +221,13 @@ class MultisiteModelAdmin(admin.ModelAdmin):
         return kwargs
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        kwargs = self.handle_multisite_foreign_keys(db_field, request,
-                                                    **kwargs)
+        kwargs = self.handle_multisite_foreign_keys(db_field, request, **kwargs)
         return super(MultisiteModelAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
-        kwargs = self.handle_multisite_foreign_keys(db_field, request,
-                                                    **kwargs)
+        kwargs = self.handle_multisite_foreign_keys(db_field, request, **kwargs)
         return super(MultisiteModelAdmin, self).formfield_for_manytomany(
             db_field, request, **kwargs
         )

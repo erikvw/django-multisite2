@@ -1,4 +1,5 @@
 import os
+import pdb
 import sys
 
 from setuptools import find_packages, setup
@@ -15,10 +16,11 @@ tests_require = [
     "tox",
 ]
 
-if sys.version_info < (3, 4):
-    tests_require.append("Django>=1.8,<2.0")
-else:
-    tests_require.append("Django>=2.0,<3.1")
+# pdb.set_trace()
+# if sys.version_info < (3, 4):
+#     tests_require.append("Django>=1.8,<2.0")
+# else:
+tests_require.append("Django>=4.0,<4.2")
 
 
 def long_description():
@@ -36,15 +38,16 @@ with open(os.path.join(here, "multisite", "__version__.py")) as f:
 files = ["multisite/test_templates/*"]
 
 setup(
-    name="django-multisite",
+    name="django-multisite-edc",
     version=version["__version__"],
     description="Serve multiple sites from a single Django application",
     long_description=long_description(),
+    long_description_content_type="text/x-rst",
     author="Leonid S Shestera",
     author_email="leonid@shestera.ru",
     maintainer="Ecometrica",
     maintainer_email="dev@ecometrica.com",
-    url="http://github.com/ecometrica/django-multisite",
+    url="http://github.com/erikvw/django-multisite",
     packages=find_packages(),
     include_package_data=True,
     package_data={"multisite": files},
@@ -60,12 +63,8 @@ setup(
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Internet",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Software Development :: Libraries",

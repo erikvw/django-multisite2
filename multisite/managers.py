@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
-from django.db import models
 from django.contrib.sites import managers
+from django.db import models
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.sql import constants
 
@@ -35,15 +34,14 @@ class SpanningCurrentSiteManager(managers.CurrentSiteManager):
         if self._CurrentSiteManager__field_name is None:
             # Guess at field name
             field_names = self.model._meta.get_all_field_names()
-            for potential_name in ['site', 'sites']:
+            for potential_name in ["site", "sites"]:
                 if potential_name in field_names:
                     self._CurrentSiteManager__field_name = potential_name
                     break
             else:
                 raise ValueError(
                     "%s couldn't find a field named either 'site' or 'sites' "
-                    "in %s." %
-                    (self.__class__.__name__, self.model._meta.object_name)
+                    "in %s." % (self.__class__.__name__, self.model._meta.object_name)
                 )
 
         fieldname_chain = self._CurrentSiteManager__field_name.split(
@@ -66,16 +64,14 @@ class SpanningCurrentSiteManager(managers.CurrentSiteManager):
         is what CurrentSiteManager expects."""
         try:
             field = model._meta.get_field(field_name)
-            if not isinstance(field, (models.ForeignKey,
-                                      models.ManyToManyField)):
+            if not isinstance(field, (models.ForeignKey, models.ManyToManyField)):
                 raise TypeError(
-                    "Field %r must be a ForeignKey or ManyToManyField."
-                    % field_name
+                    "Field %r must be a ForeignKey or ManyToManyField." % field_name
                 )
         except FieldDoesNotExist:
             raise ValueError(
-                "Couldn't find a field named %r in %s." %
-                (field_name, model._meta.object_name)
+                "Couldn't find a field named %r in %s."
+                % (field_name, model._meta.object_name)
             )
 
     def _get_related_model(self, model, fieldname):
@@ -84,4 +80,4 @@ class SpanningCurrentSiteManager(managers.CurrentSiteManager):
         try:
             return model._meta.get_field(fieldname).remote_field.model
         except AttributeError:
-            return model._meta.get_field(fieldname).rel.to
+            return model._meta.get_field(fieldname).related_model
