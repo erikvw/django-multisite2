@@ -1,10 +1,9 @@
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
 import sys
 
 from django.conf import settings
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, post_save
 
 
 def use_framework_for_site_cache():
@@ -56,21 +55,21 @@ class SiteCache(object):
         from django.core.cache import caches
 
         if cache is None:
-            cache_alias = getattr(settings, 'CACHE_MULTISITE_ALIAS', 'default')
+            cache_alias = getattr(settings, "CACHE_MULTISITE_ALIAS", "default")
             self._key_prefix = getattr(
                 settings,
-                'CACHE_MULTISITE_KEY_PREFIX',
-                settings.CACHES[cache_alias].get('KEY_PREFIX', '')
+                "CACHE_MULTISITE_KEY_PREFIX",
+                settings.CACHES[cache_alias].get("KEY_PREFIX", ""),
             )
             cache = caches[cache_alias]
         else:
             self._key_prefix = getattr(
-                settings, 'CACHE_MULTISITE_KEY_PREFIX', cache.key_prefix
+                settings, "CACHE_MULTISITE_KEY_PREFIX", cache.key_prefix
             )
         self._cache = cache
 
     def _get_cache_key(self, key):
-        return 'sites.%s.%s' % (self.key_prefix, key)
+        return "sites.%s.%s" % (self.key_prefix, key)
 
     def _clean_site(self, site):
         # Force site.id to be an int, not a SiteID object.
@@ -85,16 +84,15 @@ class SiteCache(object):
         return self._cache.get(key=self._get_cache_key(key), *args, **kwargs)
 
     def set(self, key, value, *args, **kwargs):
-        self._cache.set(key=self._get_cache_key(key),
-                        value=self._clean_site(value),
-                        *args, **kwargs)
+        self._cache.set(
+            key=self._get_cache_key(key), value=self._clean_site(value), *args, **kwargs
+        )
 
     def delete(self, key, *args, **kwargs):
         self._cache.delete(key=self._get_cache_key(key), *args, **kwargs)
 
     def __contains__(self, key, *args, **kwargs):
-        return self._cache.__contains__(key=self._get_cache_key(key),
-                                        *args, **kwargs)
+        return self._cache.__contains__(key=self._get_cache_key(key), *args, **kwargs)
 
     def clear(self, *args, **kwargs):
         self._cache.clear(*args, **kwargs)
@@ -116,7 +114,7 @@ class DictCache(object):
 
     def __getitem__(self, key):
         """x.__getitem__(y) <==> x[y]"""
-        hash(key)               # Raise TypeError if unhashable
+        hash(key)  # Raise TypeError if unhashable
         result = self._cache.get(key=key)
         if result is None:
             raise KeyError(key)
@@ -124,17 +122,17 @@ class DictCache(object):
 
     def __setitem__(self, key, value):
         """x.__setitem__(i, y) <==> x[i]=y"""
-        hash(key)               # Raise TypeError if unhashable
+        hash(key)  # Raise TypeError if unhashable
         self._cache.set(key=key, value=value)
 
     def __delitem__(self, key):
         """x.__delitem__(y) <==> del x[y]"""
-        hash(key)               # Raise TypeError if unhashable
+        hash(key)  # Raise TypeError if unhashable
         self._cache.delete(key=key)
 
     def __contains__(self, item):
         """D.__contains__(k) -> True if D has a key k, else False"""
-        hash(item)              # Raise TypeError if unhashable
+        hash(item)  # Raise TypeError if unhashable
         return self._cache.__contains__(key=item)
 
     def clear(self):
@@ -143,5 +141,5 @@ class DictCache(object):
 
     def get(self, key, default=None, version=None):
         """D.key(k[, d]) -> k if D has a key k, else d. Defaults to None"""
-        hash(key)               # Raise TypeError if unhashable
+        hash(key)  # Raise TypeError if unhashable
         return self._cache.get(key=key, default=default, version=version)

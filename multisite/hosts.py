@@ -1,17 +1,14 @@
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
-from django.utils.functional import empty, SimpleLazyObject
+from django.utils.functional import SimpleLazyObject, empty
 
-
-__ALL__ = ('ALLOWED_HOSTS', 'AllowedHosts')
+__ALL__ = ("ALLOWED_HOSTS", "AllowedHosts")
 
 _wrapped_default = empty
 
 
 class IterableLazyObject(SimpleLazyObject):
-
-    _wrapped_default = globals()['_wrapped_default']
+    _wrapped_default = globals()["_wrapped_default"]
 
     def __iter__(self):
         if self._wrapped is self._wrapped_default:
@@ -20,15 +17,16 @@ class IterableLazyObject(SimpleLazyObject):
 
 
 class AllowedHosts(object):
-
     alias_model = None
 
     def __init__(self):
         from django.conf import settings
-        self.extra_hosts = getattr(settings, 'MULTISITE_EXTRA_HOSTS', [])
+
+        self.extra_hosts = getattr(settings, "MULTISITE_EXTRA_HOSTS", [])
 
         if self.alias_model is None:
             from .models import Alias
+
             self.alias_model = Alias
 
     def __iter__(self):
@@ -38,7 +36,8 @@ class AllowedHosts(object):
         for host in self.extra_hosts:
             yield host
 
-        for host in self.alias_model.objects.values_list('domain'):
+        for host in self.alias_model.objects.values_list("domain"):
             yield host[0]
+
 
 ALLOWED_HOSTS = IterableLazyObject(lambda: AllowedHosts())

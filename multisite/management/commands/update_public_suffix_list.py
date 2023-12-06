@@ -1,24 +1,22 @@
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
 import os
 import tempfile
 
+import tldextract
 from django.conf import settings
 from django.core.management.base import BaseCommand
-
-import tldextract
 
 
 class Command(BaseCommand):
     def handle(self, **options):
-        self.setup_logging(verbosity=options.get('verbosity', 1))
+        self.setup_logging(verbosity=options.get("verbosity", 1))
 
         filename = getattr(
-            settings, 'MULTISITE_PUBLIC_SUFFIX_LIST_CACHE',
-            os.path.join(tempfile.gettempdir(), 'multisite_tld.dat')
+            settings,
+            "MULTISITE_PUBLIC_SUFFIX_LIST_CACHE",
+            os.path.join(tempfile.gettempdir(), "multisite_tld.dat"),
         )
         self.log("Updating {filename}".format(filename=filename))
 
@@ -30,7 +28,7 @@ class Command(BaseCommand):
         self.verbosity = int(verbosity)
 
         # Connect to tldextract's logger
-        self.logger = logging.getLogger('tldextract')
+        self.logger = logging.getLogger("tldextract")
         if self.verbosity < 2:
             self.logger.setLevel(logging.CRITICAL)
 

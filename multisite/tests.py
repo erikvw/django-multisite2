@@ -20,18 +20,15 @@ import tempfile
 import warnings
 from unittest import skipUnless
 
-import pytest
-from six import StringIO
-
 import django
+import pytest
 from django.urls import re_path
+from six import StringIO
 
 try:
     from unittest import mock
 except ImportError:
     import mock
-
-from multisite import SiteDomain, SiteID, threadlocals
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -41,6 +38,8 @@ from django.http import Http404, HttpResponse
 from django.template.loader import get_template
 from django.test import TestCase, override_settings
 from django.test.client import RequestFactory as DjangoRequestFactory
+
+from multisite import SiteDomain, SiteID, threadlocals
 
 from .hacks import use_framework_for_site_cache
 from .hosts import ALLOWED_HOSTS, AllowedHosts, IterableLazyObject

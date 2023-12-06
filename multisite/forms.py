@@ -1,6 +1,4 @@
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
+from __future__ import absolute_import, unicode_literals
 
 from django.contrib.sites.admin import SiteAdmin
 from django.core.exceptions import ValidationError
@@ -10,7 +8,7 @@ from .models import Alias
 
 class SiteForm(SiteAdmin.form):
     def clean_domain(self):
-        domain = self.cleaned_data['domain']
+        domain = self.cleaned_data["domain"]
 
         try:
             alias = Alias.objects.get(domain=domain)
@@ -21,5 +19,6 @@ class SiteForm(SiteAdmin.form):
         if alias.site_id == self.instance.pk and alias.is_canonical:
             return domain
 
-        raise ValidationError('Cannot overwrite non-canonical Alias: "%s"' %
-                              alias.domain)
+        raise ValidationError(
+            'Cannot overwrite non-canonical Alias: "%s"' % alias.domain
+        )

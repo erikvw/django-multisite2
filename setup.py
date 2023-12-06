@@ -20,7 +20,7 @@ tests_require = [
 # if sys.version_info < (3, 4):
 #     tests_require.append("Django>=1.8,<2.0")
 # else:
-tests_require.append("Django>=4.0,<4.2")
+tests_require.append("Django>=4.2,<5.0")
 
 
 def long_description():
@@ -63,8 +63,7 @@ setup(
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Internet",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Software Development :: Libraries",

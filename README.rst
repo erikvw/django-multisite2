@@ -76,7 +76,7 @@ safely cleared::
     # The cache connection to use for django-multisite.
     # Default: 'default'
     CACHE_MULTISITE_ALIAS = 'multisite'
-    
+
     # The cache key prefix that django-multisite should use.
     # If not set, defaults to the KEY_PREFIX used in the defined
     # CACHE_MULTISITE_ALIAS or the default cache (empty string if not set)

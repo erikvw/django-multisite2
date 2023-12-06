@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals
 
 from .template.loaders.filesystem import Loader
 
@@ -9,4 +8,4 @@ from .template.loaders.filesystem import Loader
 # same fashion as Django's.
 # For backward-compatibility reasons, Loader in this file points to what
 # used to be defined here.
-__all__ = ['Loader']
+__all__ = ["Loader"]
