@@ -2,7 +2,7 @@ import django
 
 from multisite import SiteID
 
-SECRET_KEY = "iufoj=mibkpdz*%bob952x(%49rqgv8gg45k36kjcg76&-y5=!"
+SECRET_KEY = "iufoj=mibkpdz*%bob952x(%49rqgv8gg45k36kjcg76&-y5=!"  # nosec B105
 
 DATABASES = {
     "default": {

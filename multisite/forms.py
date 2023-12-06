@@ -19,6 +19,4 @@ class SiteForm(SiteAdmin.form):
         if alias.site_id == self.instance.pk and alias.is_canonical:
             return domain
 
-        raise ValidationError(
-            'Cannot overwrite non-canonical Alias: "%s"' % alias.domain
-        )
+        raise ValidationError('Cannot overwrite non-canonical Alias: "%s"' % alias.domain)

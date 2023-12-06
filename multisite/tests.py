@@ -14,10 +14,8 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 import os
-import pdb
 import sys
 import tempfile
-import warnings
 from unittest import skipUnless
 
 import django
@@ -39,7 +37,7 @@ from django.template.loader import get_template
 from django.test import TestCase, override_settings
 from django.test.client import RequestFactory as DjangoRequestFactory
 
-from multisite import SiteDomain, SiteID, threadlocals
+from multisite import SiteDomain, SiteID
 
 from .hacks import use_framework_for_site_cache
 from .hosts import ALLOWED_HOSTS, AllowedHosts, IterableLazyObject
@@ -55,9 +53,7 @@ class RequestFactory(DjangoRequestFactory):
     def get(self, path, data={}, host=None, **extra):
         if host is None:
             host = self.host
-        return super(RequestFactory, self).get(
-            path=path, data=data, HTTP_HOST=host, **extra
-        )
+        return super(RequestFactory, self).get(path=path, data=data, HTTP_HOST=host, **extra)
 
 
 @pytest.mark.django_db
@@ -99,7 +95,7 @@ urlpatterns = [
 )
 @override_settings(
     ALLOWED_SITES=["*"],
-    ROOT_URLCONF=__name__,  # this means that urlpatterns above is used when .get() is called below.
+    ROOT_URLCONF=__name__,  # means urlpatterns above is used when .get() is called below.
     SITE_ID=SiteID(default=0),
     CACHE_MULTISITE_ALIAS="multisite",
     CACHES={
@@ -181,7 +177,8 @@ class DynamicSiteMiddlewareTest(TestCase):
             DynamicSiteMiddleware().process_request(request)
 
     def test_no_sites(self):
-        # FIXME: this needs to go into its own TestCase since it requires modifying the fixture to work properly
+        # FIXME: this needs to go into its own TestCase since
+        #  it requires modifying the fixture to work properly
         # Remove all Sites
         Site.objects.all().delete()
         # Make the request
@@ -263,9 +260,7 @@ class DynamicSiteMiddlewareFallbackTest(TestCase):
         request = self.factory.get("/")
         response = DynamicSiteMiddleware().process_request(request)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            response["Location"], settings.MULTISITE_FALLBACK_KWARGS["url"]
-        )
+        self.assertEqual(response["Location"], settings.MULTISITE_FALLBACK_KWARGS["url"])
 
     def test_class_view(self):
         from django.views.generic.base import RedirectView
@@ -566,7 +561,7 @@ class AliasTest(TestCase):
         Site.objects.all().delete()
 
     def test_create(self):
-        site0 = Site.objects.create()
+        Site.objects.create()  # site0
         site1 = Site.objects.create(domain="1.example")
         site2 = Site.objects.create(domain="2.example")
         # Missing site
@@ -887,9 +882,7 @@ class TestCookieDomainMiddleware(TestCase):
         # IP addresses should not be mutated
         with override_settings(ALLOWED_HOSTS=allowed):
             request = self.factory.get("/", host="192.0.43.10")
-            cookies = (
-                CookieDomainMiddleware().process_response(request, response).cookies
-            )
+            cookies = CookieDomainMiddleware().process_response(request, response).cookies
         self.assertEqual(cookies["a"]["domain"], "")
 
     def test_localpath(self):
@@ -903,15 +896,11 @@ class TestCookieDomainMiddleware(TestCase):
         with override_settings(ALLOWED_HOSTS=allowed):
             # Local domains should not be mutated
             request = self.factory.get("/", host="localhost")
-            cookies = (
-                CookieDomainMiddleware().process_response(request, response).cookies
-            )
+            cookies = CookieDomainMiddleware().process_response(request, response).cookies
             self.assertEqual(cookies["a"]["domain"], "")
             # Even local subdomains
             request = self.factory.get("/", host="localhost.localdomain")
-            cookies = (
-                CookieDomainMiddleware().process_response(request, response).cookies
-            )
+            cookies = CookieDomainMiddleware().process_response(request, response).cookies
         self.assertEqual(cookies["a"]["domain"], "")
 
     def test_simple_tld(self):
@@ -922,15 +911,11 @@ class TestCookieDomainMiddleware(TestCase):
         with override_settings(ALLOWED_HOSTS=allowed):
             # Top-level domains shouldn't get mutated
             request = self.factory.get("/", host="ai")
-            cookies = (
-                CookieDomainMiddleware().process_response(request, response).cookies
-            )
+            cookies = CookieDomainMiddleware().process_response(request, response).cookies
             self.assertEqual(cookies["a"]["domain"], "")
             # Domains inside a TLD are OK
             request = self.factory.get("/", host="www.ai")
-            cookies = (
-                CookieDomainMiddleware().process_response(request, response).cookies
-            )
+            cookies = CookieDomainMiddleware().process_response(request, response).cookies
         self.assertEqual(cookies["a"]["domain"], ".www.ai")
 
     def test_effective_tld(self):
@@ -941,15 +926,11 @@ class TestCookieDomainMiddleware(TestCase):
         with override_settings(ALLOWED_HOSTS=allowed):
             # Effective top-level domains with a webserver shouldn't get mutated
             request = self.factory.get("/", host="com.ai")
-            cookies = (
-                CookieDomainMiddleware().process_response(request, response).cookies
-            )
+            cookies = CookieDomainMiddleware().process_response(request, response).cookies
             self.assertEqual(cookies["a"]["domain"], "")
             # Domains within an effective TLD are OK
             request = self.factory.get("/", host="nic.com.ai")
-            cookies = (
-                CookieDomainMiddleware().process_response(request, response).cookies
-            )
+            cookies = CookieDomainMiddleware().process_response(request, response).cookies
         self.assertEqual(cookies["a"]["domain"], ".nic.com.ai")
 
     def test_subdomain_depth(self):
@@ -1045,9 +1026,7 @@ else:
             {
                 "BACKEND": "django.template.backends.django.DjangoTemplates",
                 "DIRS": [
-                    os.path.join(
-                        os.path.abspath(os.path.dirname(__file__)), "test_templates"
-                    )
+                    os.path.join(os.path.abspath(os.path.dirname(__file__)), "test_templates")
                 ],
                 "OPTIONS": {
                     "loaders": [
@@ -1059,9 +1038,7 @@ else:
     }
 
 
-@override_settings(
-    MULTISITE_DEFAULT_TEMPLATE_DIR="multisite_templates", **TEMPLATE_SETTINGS
-)
+@override_settings(MULTISITE_DEFAULT_TEMPLATE_DIR="multisite_templates", **TEMPLATE_SETTINGS)
 class TemplateLoaderTests(TestCase):
     def test_get_template_multisite_default_dir(self):
         template = get_template("test.html")

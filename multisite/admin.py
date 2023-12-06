@@ -131,9 +131,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
         if self.filter_sites_by_current_object:
             if hasattr(self.model, "site") or hasattr(self.model, "sites"):
                 self.object_sites = tuple()
-        return super(MultisiteModelAdmin, self).add_view(
-            request, form_url, extra_context
-        )
+        return super(MultisiteModelAdmin, self).add_view(request, form_url, extra_context)
 
     def change_view(self, request, object_id, extra_context=None):
         if self.filter_sites_by_current_object:
@@ -145,9 +143,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
                     self.object_sites = (object_instance.site.pk,)
                 except AttributeError:
                     pass  # assume the object doesn't belong to a site
-        return super(MultisiteModelAdmin, self).change_view(
-            request, object_id, extra_context
-        )
+        return super(MultisiteModelAdmin, self).change_view(request, object_id, extra_context)
 
     def handle_multisite_foreign_keys(self, db_field, request, **kwargs):
         """
@@ -190,23 +186,19 @@ class MultisiteModelAdmin(admin.ModelAdmin):
             user_sites = Site.objects.all()
         else:
             user_sites = request.user.get_profile().sites.all()
-        if self.filter_sites_by_current_object and hasattr(self, "object_sites"):
-            sites = user_sites.filter(pk__in=self.object_sites)
-        else:
-            sites = user_sites
+        # if self.filter_sites_by_current_object and hasattr(self, "object_sites"):
+        #     sites = user_sites.filter(pk__in=self.object_sites)
+        # else:
+        #     sites = user_sites
 
         try:
             remote_model = db_field.remote_field.model
         except AttributeError:
             remote_model = db_field.related_model
         if hasattr(remote_model, "site"):
-            kwargs["queryset"] = remote_model._default_manager.filter(
-                site__in=user_sites
-            )
+            kwargs["queryset"] = remote_model._default_manager.filter(site__in=user_sites)
         if hasattr(remote_model, "sites"):
-            kwargs["queryset"] = remote_model._default_manager.filter(
-                sites__in=user_sites
-            )
+            kwargs["queryset"] = remote_model._default_manager.filter(sites__in=user_sites)
         if db_field.name == "site" or db_field.name == "sites":
             kwargs["queryset"] = user_sites
         if (
@@ -214,9 +206,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
             and db_field.name in self.multisite_indirect_foreign_key_path.keys()
         ):
             fkey = self.multisite_indirect_foreign_key_path[db_field.name]
-            kwargs["queryset"] = remote_model._default_manager.filter(
-                **{fkey: user_sites}
-            )
+            kwargs["queryset"] = remote_model._default_manager.filter(**{fkey: user_sites})
 
         return kwargs
 

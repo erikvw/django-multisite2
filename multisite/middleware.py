@@ -29,8 +29,7 @@ class DynamicSiteMiddleware:
         self.get_response = get_response
         if not hasattr(settings.SITE_ID, "set"):
             raise TypeError(
-                "Invalid type for settings.SITE_ID: %s"
-                % type(settings.SITE_ID).__name__
+                "Invalid type for settings.SITE_ID: %s" % type(settings.SITE_ID).__name__
             )
 
         self.cache_alias = getattr(settings, "CACHE_MULTISITE_ALIAS", "default")
@@ -52,7 +51,7 @@ class DynamicSiteMiddleware:
 
     def get_cache_key(self, netloc):
         """Returns a cache key based on ``netloc``."""
-        netloc = md5_constructor(netloc.encode("utf-8"))
+        netloc = md5_constructor(netloc.encode("utf-8"), usedforsecurity=False)
         return "multisite.alias.%s.%s" % (self.key_prefix, netloc.hexdigest())
 
     def netloc_parse(self, netloc):
@@ -157,9 +156,7 @@ class DynamicSiteMiddleware:
         if not alias.redirect_to_canonical or alias.is_canonical:
             return
         url = urlsplit(request.build_absolute_uri(request.get_full_path()))
-        url = urlunsplit(
-            (url.scheme, alias.site.domain, url.path, url.query, url.fragment)
-        )
+        url = urlunsplit((url.scheme, alias.site.domain, url.path, url.query, url.fragment))
         return HttpResponsePermanentRedirect(url)
 
     def process_request(self, request):
@@ -217,9 +214,7 @@ class CookieDomainMiddleware:
         self.depth = int(getattr(settings, "MULTISITE_COOKIE_DOMAIN_DEPTH", 0))
         if self.depth < 0:
             raise ValueError(
-                "Invalid MULTISITE_COOKIE_DOMAIN_DEPTH: {depth!r}".format(
-                    depth=self.depth
-                )
+                "Invalid MULTISITE_COOKIE_DOMAIN_DEPTH: {depth!r}".format(depth=self.depth)
             )
         self.psl_cache = getattr(settings, "MULTISITE_PUBLIC_SUFFIX_LIST_CACHE", None)
         if self.psl_cache is None:

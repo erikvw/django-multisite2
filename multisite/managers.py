@@ -44,9 +44,7 @@ class SpanningCurrentSiteManager(managers.CurrentSiteManager):
                     "in %s." % (self.__class__.__name__, self.model._meta.object_name)
                 )
 
-        fieldname_chain = self._CurrentSiteManager__field_name.split(
-            constants.LOOKUP_SEP
-        )
+        fieldname_chain = self._CurrentSiteManager__field_name.split(constants.LOOKUP_SEP)
         model = self.model
 
         for fieldname in fieldname_chain:
@@ -70,8 +68,7 @@ class SpanningCurrentSiteManager(managers.CurrentSiteManager):
                 )
         except FieldDoesNotExist:
             raise ValueError(
-                "Couldn't find a field named %r in %s."
-                % (field_name, model._meta.object_name)
+                "Couldn't find a field named %r in %s." % (field_name, model._meta.object_name)
             )
 
     def _get_related_model(self, model, fieldname):

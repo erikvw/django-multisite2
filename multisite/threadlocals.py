@@ -124,7 +124,8 @@ class SiteDomain(SiteID):
         ``default`` is the default domain name, resolved to SITE_ID, if
         that is unset.
         """
-        # make sure they passed us a string; doing this is the single hardest py2/py3 compat headache.
+        # make sure they passed us a string; doing this is the single
+        # hardest py2/py3 compat headache.
         # http://python-future.org/compatible_idioms.html#basestring and
         # https://github.com/PythonCharmers/python-future/blob/master/src/past/types/basestring.py
         # are not super informative, so just fall back on a literal version check:

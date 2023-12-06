@@ -1,6 +1,4 @@
 import os
-import pdb
-import sys
 
 from setuptools import find_packages, setup
 
@@ -32,7 +30,7 @@ def long_description():
 here = os.path.abspath(_dir_)
 version = {}
 with open(os.path.join(here, "multisite", "__version__.py")) as f:
-    exec(f.read(), version)
+    exec(f.read(), version)  # nosec B102
 
 
 files = ["multisite/test_templates/*"]
