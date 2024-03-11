@@ -14,13 +14,8 @@ tests_require = [
     "tox",
     "pluggy<1.0,>=0.12",
     "pytest-runner",
+    "Django>=4.2,<5.0",
 ]
-
-# pdb.set_trace()
-# if sys.version_info < (3, 4):
-#     tests_require.append("Django>=1.8,<2.0")
-# else:
-tests_require.append("Django>=4.2,<5.0")
 
 
 def long_description():
