@@ -2,9 +2,9 @@
 from __future__ import absolute_import, unicode_literals
 
 from django.contrib.sites import managers
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models.fields import FieldDoesNotExist
-from django.db.models.sql import constants
+from django.db.models.constants import LOOKUP_SEP
 
 
 class SpanningCurrentSiteManager(managers.CurrentSiteManager):
@@ -44,7 +44,7 @@ class SpanningCurrentSiteManager(managers.CurrentSiteManager):
                     "in %s." % (self.__class__.__name__, self.model._meta.object_name)
                 )
 
-        fieldname_chain = self._CurrentSiteManager__field_name.split(constants.LOOKUP_SEP)
+        fieldname_chain = self._CurrentSiteManager__field_name.split(LOOKUP_SEP)
         model = self.model
 
         for fieldname in fieldname_chain:
@@ -58,7 +58,7 @@ class SpanningCurrentSiteManager(managers.CurrentSiteManager):
     def _validate_single_field_name(self, model, field_name):
         """Checks if the given fieldname can be used to make a link between a
         model and a site with the SpanningCurrentSiteManager class.  If
-        anything is wrong, will raises an appropriate exception, because that
+        anything is wrong, will raise an appropriate exception, because that
         is what CurrentSiteManager expects."""
         try:
             field = model._meta.get_field(field_name)

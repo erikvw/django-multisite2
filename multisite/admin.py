@@ -58,8 +58,8 @@ class MultisiteChangeList(ChangeList):
         This might be considered a fragile function, since it relies on a
         fair bit of Django's internals.
         """
-        get_filters = super(MultisiteChangeList, self).get_filters
-        filter_specs, has_filter_specs = get_filters(request, *args, **kwargs)
+        get_filters = super().get_filters
+        filter_specs, has_filter_specs = get_filters(request)
         if request.user.is_superuser or not has_filter_specs:
             return filter_specs, has_filter_specs
         new_filter_specs = []
@@ -110,7 +110,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
 
         (As long as you're not a superuser)
         """
-        qs = super().queryset(request)
+        qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
 
@@ -131,9 +131,9 @@ class MultisiteModelAdmin(admin.ModelAdmin):
         if self.filter_sites_by_current_object:
             if hasattr(self.model, "site") or hasattr(self.model, "sites"):
                 self.object_sites = tuple()
-        return super(MultisiteModelAdmin, self).add_view(request, form_url, extra_context)
+        return super().add_view(request, form_url, extra_context)
 
-    def change_view(self, request, object_id, extra_context=None):
+    def change_view(self, request, object_id, form_url="", extra_context=None):
         if self.filter_sites_by_current_object:
             object_instance = self.get_object(request, object_id)
             try:
@@ -143,7 +143,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
                     self.object_sites = (object_instance.site.pk,)
                 except AttributeError:
                     pass  # assume the object doesn't belong to a site
-        return super(MultisiteModelAdmin, self).change_view(request, object_id, extra_context)
+        return super().change_view(request, object_id, extra_context)
 
     def handle_multisite_foreign_keys(self, db_field, request, **kwargs):
         """
@@ -212,15 +212,11 @@ class MultisiteModelAdmin(admin.ModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         kwargs = self.handle_multisite_foreign_keys(db_field, request, **kwargs)
-        return super(MultisiteModelAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         kwargs = self.handle_multisite_foreign_keys(db_field, request, **kwargs)
-        return super(MultisiteModelAdmin, self).formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def get_changelist(self, request, **kwargs):
         """
