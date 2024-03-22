@@ -3,20 +3,21 @@ from threading import local
 
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.deprecation import MiddlewareMixin
 
-_thread_locals = local()
+# from django.utils.deprecation import MiddlewareMixin
 
-
-def get_request():
-    return getattr(_thread_locals, "request", None)
+# _thread_locals = local()
 
 
-class ThreadLocalsMiddleware(MiddlewareMixin):
-    """Middleware that saves request in thread local storage"""
+# def get_request():
+#     return getattr(_thread_locals, "request", None)
 
-    def process_request(self, request):
-        _thread_locals.request = request
+
+# class ThreadLocalsMiddleware(MiddlewareMixin):
+#     """Middleware that saves request in thread local storage"""
+#
+#     def process_request(self, request):
+#         _thread_locals.request = request
 
 
 class SiteID(local):
@@ -139,7 +140,7 @@ class SiteDomain(SiteID):
         """Returns the default SITE_ID that matches the default domain name."""
         from django.contrib.sites.models import Site
 
-        if not "django.contrib.sites" not in settings.INSTALLED_APPS:
+        if "django.contrib.sites" not in settings.INSTALLED_APPS:
             raise ImproperlyConfigured(
                 "django.contrib.sites is not in settings.INSTALLED_APPS"
             )

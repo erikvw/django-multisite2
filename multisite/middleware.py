@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, unicode_literals
+from __future__ import annotations
 
 import os
 import tempfile
-
-try:
-    from urlparse import urlsplit, urlunsplit
-except ImportError:
-    from urllib.parse import urlsplit, urlunsplit
-
 from hashlib import md5 as md5_constructor
+from typing import TYPE_CHECKING
+from urllib.parse import urlsplit, urlunsplit
 
 import django
+import tldextract
 from django.conf import settings
 from django.contrib.sites.models import SITE_CACHE, Site
 from django.core import mail
@@ -23,9 +20,12 @@ from django.urls import get_callable
 
 from .models import Alias
 
+if TYPE_CHECKING:
+    from django.core.handlers.wsgi import WSGIRequest
+
 
 class DynamicSiteMiddleware:
-    def __init__(self, get_response):
+    def __init__(self, get_response=None):
         self.get_response = get_response
         if not hasattr(settings.SITE_ID, "set"):
             raise TypeError(
@@ -54,7 +54,8 @@ class DynamicSiteMiddleware:
         netloc = md5_constructor(netloc.encode("utf-8"), usedforsecurity=False)
         return "multisite.alias.%s.%s" % (self.key_prefix, netloc.hexdigest())
 
-    def netloc_parse(self, netloc):
+    @staticmethod
+    def netloc_parse(netloc):
         """
         Returns ``(host, port)`` for ``netloc`` of the form ``'host:port'``.
 
@@ -65,15 +66,17 @@ class DynamicSiteMiddleware:
         else:
             return netloc, None
 
-    def get_development_alias(self, netloc):
+    @staticmethod
+    def get_development_alias(netloc) -> Alias:
         """
         Returns valid Alias when in development mode. Otherwise, returns None.
 
         Development mode is either:
         - Running tests, i.e. manage.py test
-        - Running locally in settings.DEBUG = True, where the hostname is
+        - Running locally in `settings.DEBUG` = True, where the hostname is
           a top-level name, i.e. localhost
         """
+        alias = None
         # When running tests, django.core.mail.outbox exists and
         # netloc == 'testserver'
         is_testserver = hasattr(mail, "outbox") and netloc in (
@@ -87,28 +90,29 @@ class DynamicSiteMiddleware:
             try:
                 # Prefer the default SITE_ID
                 site_id = settings.SITE_ID.get_default()
-                return Alias.canonical.get(site=site_id)
             except ValueError:
                 # Fallback to the first Site object
-                return Alias.canonical.order_by("site")[0]
+                alias = Alias.canonical.order_by("site")[0]
+            else:
+                alias = Alias.canonical.get(site=site_id)
+        return alias
 
-    def get_alias(self, netloc):
+    def get_alias(self, netloc) -> Alias | None:
         """
         Returns Alias matching ``netloc``. Otherwise, returns None.
         """
         host, port = self.netloc_parse(netloc)
-
         try:
             alias = Alias.objects.resolve(host=host, port=port)
         except ValueError:
             alias = None
-
         if alias is None:
             # Running under TestCase or runserver?
-            return self.get_development_alias(netloc)
+            alias = self.get_development_alias(netloc)
         return alias
 
-    def fallback_view(self, request):
+    @staticmethod
+    def fallback_view(request):
         """
         Runs the fallback view function in ``settings.MULTISITE_FALLBACK``.
 
@@ -152,14 +156,17 @@ class DynamicSiteMiddleware:
         # View function
         return view(request, **kwargs)
 
-    def redirect_to_canonical(self, request, alias):
+    @staticmethod
+    def redirect_to_canonical(
+        request: WSGIRequest, alias: Alias
+    ) -> HttpResponsePermanentRedirect | None:
         if not alias.redirect_to_canonical or alias.is_canonical:
             return
         url = urlsplit(request.build_absolute_uri(request.get_full_path()))
         url = urlunsplit((url.scheme, alias.site.domain, url.path, url.query, url.fragment))
         return HttpResponsePermanentRedirect(url)
 
-    def process_request(self, request):
+    def process_request(self, request: WSGIRequest) -> HttpResponsePermanentRedirect | None:
         try:
             netloc = request.get_host().lower()
         except DisallowedHost:
@@ -190,12 +197,12 @@ class DynamicSiteMiddleware:
         return self.redirect_to_canonical(request, alias)
 
     @classmethod
-    def site_domain_cache_hook(self, sender, instance, *args, **kwargs):
-        """Caches Site.domain in the object for site_domain_changed_hook."""
+    def site_domain_cache_hook(cls, sender, instance, *args, **kwargs):
+        """Caches `Site.domain` in the object for site_domain_changed_hook."""
         instance._domain_cache = instance.domain
 
     def site_domain_changed_hook(self, sender, instance, raw, *args, **kwargs):
-        """Clears the cache if Site.domain has changed."""
+        """Clears the cache if `Site.domain` has changed."""
         if raw or instance.pk is None:
             return
 
@@ -222,8 +229,6 @@ class CookieDomainMiddleware:
         self._tldextract = None
 
     def tldextract(self, url):
-        import tldextract
-
         if self._tldextract is None:
             self._tldextract = tldextract.TLDExtract(cache_file=self.psl_cache)
         return self._tldextract(url)

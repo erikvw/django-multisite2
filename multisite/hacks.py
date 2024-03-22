@@ -7,11 +7,13 @@ from django.db.models.signals import post_delete, post_save
 
 
 def use_framework_for_site_cache():
-    """Patches sites app to use the caching framework instead of a dict."""
-    # This patch has to exist because SITE_CACHE is normally a dict,
-    # which is local only to the process. When running multiple
-    # processes, a change to a Site will not be reflected across other
-    # ones.
+    """Patches sites app to use the caching framework instead of a dict.
+
+    This patch has to exist because SITE_CACHE is normally a dict,
+    which is local only to the process. When running multiple
+    processes, a change to a Site will not be reflected across other
+    ones.
+    """
     from django.contrib.sites import models
 
     # Patch the SITE_CACHE
@@ -19,26 +21,29 @@ def use_framework_for_site_cache():
     models.SITE_CACHE = DictCache(site_cache)
 
     # Patch the SiteManager class
-    models.SiteManager.clear_cache = SiteManager_clear_cache
-    models.SiteManager._get_site_by_id = SiteManager_get_site_by_id
+    models.SiteManager.clear_cache = site_manager_clear_cache
+    models.SiteManager._get_site_by_id = site_manager_get_site_by_id
 
     # Hooks to update SiteCache
     post_save.connect(site_cache._site_changed_hook, sender=models.Site)
     post_delete.connect(site_cache._site_deleted_hook, sender=models.Site)
 
 
-# Override SiteManager.clear_cache so it doesn't clobber SITE_CACHE
-def SiteManager_clear_cache(self):
-    """Clears the ``Site`` object cache."""
+def site_manager_clear_cache(self):
+    """Clears the ``Site`` object cache.
+
+    Override `SiteManager.clear_cache` so it doesn't clobber
+    SITE_CACHE
+    """
     models = sys.modules.get(self.__class__.__module__)
     models.SITE_CACHE.clear()
 
 
-# Override SiteManager._get_site_by_id
-def SiteManager_get_site_by_id(self, site_id):
-    """
-    Patch _get_site_by_id to retrieve the site from the cache at the
-    beginning of the method to avoid a race condition.
+def site_manager_get_site_by_id(self, site_id):
+    """Patch _get_site_by_id to retrieve the site from the cache at
+    the beginning of the method to avoid a race condition.
+
+    Override SiteManager._get_site_by_id
     """
     models = sys.modules.get(self.__class__.__module__)
     site = models.SITE_CACHE.get(site_id)
@@ -107,7 +112,9 @@ class SiteCache(object):
 
 
 class DictCache(object):
-    """Add dictionary protocol to django.core.cache.backends.BaseCache."""
+    """Add dictionary protocol to `django.core.cache.backends.
+    BaseCache`.
+    """
 
     def __init__(self, cache):
         self._cache = cache
@@ -131,7 +138,7 @@ class DictCache(object):
         self._cache.delete(key=key)
 
     def __contains__(self, item):
-        """D.__contains__(k) -> True if D has a key k, else False"""
+        """D.__contains__(k) -> True if D has a key k, else False."""
         hash(item)  # Raise TypeError if unhashable
         return self._cache.__contains__(key=item)
 
@@ -140,6 +147,9 @@ class DictCache(object):
         self._cache.clear()
 
     def get(self, key, default=None, version=None):
-        """D.key(k[, d]) -> k if D has a key k, else d. Defaults to None"""
+        """D.key(k[, d]) -> k if D has a key k, else d.
+
+        Defaults to None.
+        """
         hash(key)  # Raise TypeError if unhashable
         return self._cache.get(key=key, default=default, version=version)

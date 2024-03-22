@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 from django.contrib.sites.admin import SiteAdmin
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 
 from .models import Alias
 
@@ -12,7 +12,7 @@ class SiteForm(SiteAdmin.form):
 
         try:
             alias = Alias.objects.get(domain=domain)
-        except Alias.DoesNotExist:
+        except ObjectDoesNotExist:
             # New Site that doesn't clobber an Alias
             return domain
 

@@ -1,10 +1,27 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from django.contrib import admin
 from django.contrib.admin.views.main import ChangeList
 from django.contrib.sites.admin import SiteAdmin
 from django.contrib.sites.models import Site
+from django.db import models
 
 from .forms import SiteForm
 from .models import Alias
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import User
+    from django.core.handlers.wsgi import WSGIRequest as BaseWSGIRequest
+    from django.db.models import QuerySet
+
+    class UserProfile(models.Model):
+        user = models.ForeignKey(User, on_delete=models.PROTECT)
+        sites = models.ManyToManyField(Site, blank=True)
+
+    class WSGIRequest(BaseWSGIRequest):
+        user: User
 
 
 class AliasAdmin(admin.ModelAdmin):
@@ -21,6 +38,19 @@ class AliasAdmin(admin.ModelAdmin):
 admin.site.register(Alias, AliasAdmin)
 
 
+def get_user_sites(request) -> QuerySet:
+    if request.user.is_superuser:
+        sites = Site.objects.all()
+    else:
+        try:
+            user_profile = request.user.userprofile.sites.all()
+        except AttributeError:
+            sites = Site.objects.all().order_by("domain")
+        else:
+            sites = user_profile.sites.order_by("domain")
+    return sites
+
+
 class AliasInline(admin.TabularInline):
     """Inline for Alias model, showing non-canonical aliases."""
 
@@ -28,7 +58,7 @@ class AliasInline(admin.TabularInline):
     extra = 1
     ordering = ("domain",)
 
-    def get_queryset(self, request):
+    def get_queryset(self, request: WSGIRequest):
         """Returns only non-canonical aliases."""
         qs = self.model.aliases.get_queryset()
         ordering = self.ordering or ()
@@ -53,7 +83,7 @@ class MultisiteChangeList(ChangeList):
     internals.
     """
 
-    def get_filters(self, request, *args, **kwargs):
+    def get_filters(self, request: WSGIRequest, *args, **kwargs) -> tuple[list, bool]:
         """
         This might be considered a fragile function, since it relies on a
         fair bit of Django's internals.
@@ -63,8 +93,7 @@ class MultisiteChangeList(ChangeList):
         if request.user.is_superuser or not has_filter_specs:
             return filter_specs, has_filter_specs
         new_filter_specs = []
-        profile = request.user.get_profile()
-        user_sites = frozenset(profile.sites.values_list("pk", "domain"))
+        user_sites = frozenset(get_user_sites(request).values_list("pk", "domain"))
         for filter_spec in filter_specs:
             try:
                 try:
@@ -95,7 +124,11 @@ class MultisiteModelAdmin(admin.ModelAdmin):
 
     filter_sites_by_current_object = False
 
-    def get_queryset(self, request):
+    def __init__(self, model, admin_site):
+        self.object_sites: tuple | None = None
+        super().__init__(model, admin_site)
+
+    def get_queryset(self, request: WSGIRequest) -> QuerySet:
         """
         Filters lists of items to items belonging to sites assigned to the
         current member.
@@ -113,8 +146,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
-
-        user_sites = request.user.get_profile().sites.all()
+        user_sites = get_user_sites(request)
         if hasattr(qs.model, "site"):
             qs = qs.filter(site__in=user_sites)
         elif hasattr(qs.model, "sites"):
@@ -127,13 +159,15 @@ class MultisiteModelAdmin(admin.ModelAdmin):
 
         return qs
 
-    def add_view(self, request, form_url="", extra_context=None):
+    def add_view(self, request: WSGIRequest, form_url: str = "", extra_context: dict = None):
         if self.filter_sites_by_current_object:
             if hasattr(self.model, "site") or hasattr(self.model, "sites"):
                 self.object_sites = tuple()
         return super().add_view(request, form_url, extra_context)
 
-    def change_view(self, request, object_id, form_url="", extra_context=None):
+    def change_view(
+        self, request: WSGIRequest, object_id, form_url: str = "", extra_context: dict = None
+    ):
         if self.filter_sites_by_current_object:
             object_instance = self.get_object(request, object_id)
             try:
@@ -143,7 +177,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
                     self.object_sites = (object_instance.site.pk,)
                 except AttributeError:
                     pass  # assume the object doesn't belong to a site
-        return super().change_view(request, object_id, extra_context)
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def handle_multisite_foreign_keys(self, db_field, request, **kwargs):
         """
@@ -181,16 +215,7 @@ class MultisiteModelAdmin(admin.ModelAdmin):
         then the FK fields to objects that also belong to a site won't show
         any objects. This is due to filtering on an empty queryset.
         """
-
-        if request.user.is_superuser:
-            user_sites = Site.objects.all()
-        else:
-            user_sites = request.user.get_profile().sites.all()
-        # if self.filter_sites_by_current_object and hasattr(self, "object_sites"):
-        #     sites = user_sites.filter(pk__in=self.object_sites)
-        # else:
-        #     sites = user_sites
-
+        user_sites = get_user_sites(request)
         try:
             remote_model = db_field.remote_field.model
         except AttributeError:
