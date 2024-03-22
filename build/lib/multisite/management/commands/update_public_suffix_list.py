@@ -14,7 +14,9 @@ class Command(BaseCommand):
         self.setup_logging(verbosity=options.get("verbosity", 1))
 
         filename = getattr(
-            settings, "MULTISITE_PUBLIC_SUFFIX_LIST_CACHE", tempfile.gettempdir()
+            settings,
+            "MULTISITE_PUBLIC_SUFFIX_LIST_CACHE",
+            os.path.join(tempfile.gettempdir(), "multisite_tld.dat"),
         )
         self.log("Updating {filename}".format(filename=filename))
 

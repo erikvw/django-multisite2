@@ -223,14 +223,14 @@ class CookieDomainMiddleware:
             raise ValueError(
                 "Invalid MULTISITE_COOKIE_DOMAIN_DEPTH: {depth!r}".format(depth=self.depth)
             )
-        self.psl_cache_dir = getattr(settings, "MULTISITE_PUBLIC_SUFFIX_LIST_CACHE_DIR", None)
-        if self.psl_cache_dir is None:
-            self.psl_cache_dir = tempfile.gettempdir()
+        self.psl_cache = getattr(settings, "MULTISITE_PUBLIC_SUFFIX_LIST_CACHE", None)
+        if self.psl_cache is None:
+            self.psl_cache = os.path.join(tempfile.gettempdir(), "multisite_tld.dat")
         self._tldextract = None
 
     def tldextract(self, url):
         if self._tldextract is None:
-            self._tldextract = tldextract.TLDExtract(cache_dir=self.psl_cache_dir)
+            self._tldextract = tldextract.TLDExtract(cache_file=self.psl_cache)
         return self._tldextract(url)
 
     def match_cookies(self, request, response):

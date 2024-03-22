@@ -755,7 +755,7 @@ class AliasTest(TestCase):
 
 @override_settings(
     MULTISITE_COOKIE_DOMAIN_DEPTH=0,
-    MULTISITE_PUBLIC_SUFFIX_LIST_CACHE_DIR=None,
+    MULTISITE_PUBLIC_SUFFIX_LIST_CACHE=None,
     ALLOWED_HOSTS=ALLOWED_HOSTS,
     MULTISITE_EXTRA_HOSTS=[".extrahost.com"],
 )
@@ -772,15 +772,18 @@ class TestCookieDomainMiddleware(TestCase):
 
     def test_init(self):
         self.assertEqual(CookieDomainMiddleware(None).depth, 0)
-        self.assertEqual(CookieDomainMiddleware(None).psl_cache_dir, tempfile.gettempdir())
+        self.assertEqual(
+            CookieDomainMiddleware(None).psl_cache,
+            os.path.join(tempfile.gettempdir(), "multisite_tld.dat"),
+        )
 
         with override_settings(
             MULTISITE_COOKIE_DOMAIN_DEPTH=1,
-            MULTISITE_PUBLIC_SUFFIX_LIST_CACHE_DIR="/var/psl",
+            MULTISITE_PUBLIC_SUFFIX_LIST_CACHE="/var/psl",
         ):
             middleware = CookieDomainMiddleware(None)
             self.assertEqual(middleware.depth, 1)
-            self.assertEqual(middleware.psl_cache_dir, "/var/psl")
+            self.assertEqual(middleware.psl_cache, "/var/psl")
 
         with override_settings(MULTISITE_COOKIE_DOMAIN_DEPTH=-1):
             self.assertRaises(ValueError, CookieDomainMiddleware, None)
@@ -1010,7 +1013,7 @@ class TemplateLoaderTests(TestCase):
 
 class UpdatePublicSuffixListCommandTestCase(TestCase):
     def setUp(self):
-        self.cache_file = tempfile.gettempdir()
+        self.cache_file = os.path.join(tempfile.gettempdir(), "multisite_tld.dat")
         # save the tldextract logger output to a buffer to test output
         self.out = StringIO()
         self.logger = logging.getLogger("tldextract")
