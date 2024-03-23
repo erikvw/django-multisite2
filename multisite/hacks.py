@@ -1,9 +1,14 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import annotations
 
 import sys
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_delete, post_save
+
+__all__ = ["use_framework_for_site_cache"]
+
+from multisite.exceptions import MultisiteSiteDoesNotExist
 
 
 def use_framework_for_site_cache():
@@ -48,12 +53,15 @@ def site_manager_get_site_by_id(self, site_id):
     models = sys.modules.get(self.__class__.__module__)
     site = models.SITE_CACHE.get(site_id)
     if site is None:
-        site = self.get(pk=site_id)
+        try:
+            site = self.get(pk=site_id)
+        except ObjectDoesNotExist as e:
+            raise MultisiteSiteDoesNotExist(f"{e} Got site_id={site_id}.")
         models.SITE_CACHE[site_id] = site
     return site
 
 
-class SiteCache(object):
+class SiteCache:
     """Wrapper for SITE_CACHE that assigns a key_prefix."""
 
     def __init__(self, cache=None):
@@ -111,7 +119,7 @@ class SiteCache(object):
         self.delete(key=instance.pk)
 
 
-class DictCache(object):
+class DictCache:
     """Add dictionary protocol to `django.core.cache.backends.
     BaseCache`.
     """

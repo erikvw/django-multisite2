@@ -14,5 +14,5 @@ if __name__ == "__main__":
     failfast = any([True for t in sys.argv if t.startswith("--failfast")])
     keepdb = any([True for t in sys.argv if t.startswith("--keepdb")])
     opts = dict(failfast=failfast, tags=tags, keepdb=keepdb)
-    failures = DiscoverRunner(**opts).run_tests(["multisite.tests"], **opts)
+    failures = DiscoverRunner(**opts).run_tests(["multisite.tests.tests"], **opts)
     sys.exit(failures)

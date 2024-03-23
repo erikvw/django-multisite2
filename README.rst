@@ -1,7 +1,5 @@
-.. image:: https://travis-ci.org/ecometrica/django-multisite.svg?branch=master
-    :target: https://travis-ci.org/ecometrica/django-multisite?branch=master
-.. image:: https://coveralls.io/repos/github/ecometrica/django-multisite/badge.svg?branch=master
-    :target: https://coveralls.io/github/ecometrica/django-multisite?branch=master
+|pypi| |actions| |codecov| |downloads| |maintainability| |black|
+
 
 
 README
@@ -216,3 +214,27 @@ Before deploying a change, to verify it has not broken anything by running::
     tox
 
 This runs the tests under every supported combination of Django and Python.
+
+
+
+
+.. |pypi| image:: https://img.shields.io/pypi/v/django-multisite.svg
+    :target: https://pypi.python.org/pypi/django-multisite
+
+.. |actions| image:: https://github.com/erikvw/django-multisite/actions/workflows/build.yml/badge.svg
+  :target: https://github.com/erikvw/django-multisite/actions/workflows/build.yml
+
+.. |codecov| image:: https://codecov.io/gh/erikvw/django-multisite/branch/develop/graph/badge.svg
+  :target: https://codecov.io/gh/erikvw/django-multisite
+
+.. |downloads| image:: https://pepy.tech/badge/django-multisite
+   :target: https://pepy.tech/project/django-multisite
+
+.. |maintainability| image:: https://api.codeclimate.com/v1/badges/d280e92995a883a4f8db/maintainability
+   :target: https://codeclimate.com/github/erikvw/django-multisite/maintainability
+   :alt: Maintainability
+
+.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/ambv/black
+   :alt: Code Style
+

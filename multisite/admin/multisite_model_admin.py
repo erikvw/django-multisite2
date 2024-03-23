@@ -3,13 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from django.contrib import admin
-from django.contrib.admin.views.main import ChangeList
-from django.contrib.sites.admin import SiteAdmin
 from django.contrib.sites.models import Site
 from django.db import models
 
-from .forms import SiteForm
-from .models import Alias
+from ..utils import get_user_sites
+from .multisite_changelist import MultisiteChangeList
+
+__all__ = ["MultisiteModelAdmin"]
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import User
@@ -22,98 +22,6 @@ if TYPE_CHECKING:
 
     class WSGIRequest(BaseWSGIRequest):
         user: User
-
-
-class AliasAdmin(admin.ModelAdmin):
-    """Admin for Alias model."""
-
-    list_display = ("domain", "site", "is_canonical", "redirect_to_canonical")
-    list_filter = ("is_canonical", "redirect_to_canonical")
-    ordering = ("domain",)
-    raw_id_fields = ("site",)
-    readonly_fields = ("is_canonical",)
-    search_fields = ("domain",)
-
-
-admin.site.register(Alias, AliasAdmin)
-
-
-def get_user_sites(request) -> QuerySet:
-    if request.user.is_superuser:
-        sites = Site.objects.all()
-    else:
-        try:
-            user_profile = request.user.userprofile.sites.all()
-        except AttributeError:
-            sites = Site.objects.all().order_by("domain")
-        else:
-            sites = user_profile.sites.order_by("domain")
-    return sites
-
-
-class AliasInline(admin.TabularInline):
-    """Inline for Alias model, showing non-canonical aliases."""
-
-    model = Alias
-    extra = 1
-    ordering = ("domain",)
-
-    def get_queryset(self, request: WSGIRequest):
-        """Returns only non-canonical aliases."""
-        qs = self.model.aliases.get_queryset()
-        ordering = self.ordering or ()
-        if ordering:
-            qs = qs.order_by(*ordering)
-        return qs
-
-
-# HACK: Monkeypatch AliasInline into SiteAdmin
-SiteAdmin.inlines = type(SiteAdmin.inlines)([AliasInline]) + SiteAdmin.inlines
-
-# HACK: Monkeypatch Alias validation into SiteForm
-SiteAdmin.form = SiteForm
-
-
-class MultisiteChangeList(ChangeList):
-    """
-    A ChangeList like the built-in admin one, but it excludes site filters for
-    sites you're not associated with, unless you're a super-user.
-
-    At this point, it's probably fragile, given its reliance on Django
-    internals.
-    """
-
-    def get_filters(self, request: WSGIRequest, *args, **kwargs) -> tuple[list, bool]:
-        """
-        This might be considered a fragile function, since it relies on a
-        fair bit of Django's internals.
-        """
-        get_filters = super().get_filters
-        filter_specs, has_filter_specs = get_filters(request)
-        if request.user.is_superuser or not has_filter_specs:
-            return filter_specs, has_filter_specs
-        new_filter_specs = []
-        user_sites = frozenset(get_user_sites(request).values_list("pk", "domain"))
-        for filter_spec in filter_specs:
-            try:
-                try:
-                    remote_model = filter_spec.field.remote_field.model
-                except AttributeError:
-                    remote_model = filter_spec.field.related_model
-            except AttributeError:
-                new_filter_specs.append(filter_spec)
-                continue
-            if remote_model is not Site:
-                new_filter_specs.append(filter_spec)
-                continue
-            lookup_choices = frozenset(filter_spec.lookup_choices) & user_sites
-            if len(lookup_choices) > 1:
-                # put the choices back into the form they came in
-                filter_spec.lookup_choices = list(lookup_choices)
-                filter_spec.lookup_choices.sort()
-                new_filter_specs.append(filter_spec)
-
-        return new_filter_specs, bool(new_filter_specs)
 
 
 class MultisiteModelAdmin(admin.ModelAdmin):
