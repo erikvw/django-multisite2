@@ -7,7 +7,7 @@ README
 
 Install with pip::
 
-    pip install django-multisite2
+    pip install django-multisite-edc
 
 
 Quickstart
