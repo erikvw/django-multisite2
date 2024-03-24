@@ -7,11 +7,7 @@ README
 
 Install with pip::
 
-    pip install django-multisite
-
-Or get the code via git::
-
-    git clone git://github.com/erikvw/django-multisite.git django-multisite
+    pip install django-multisite2
 
 
 Quickstart
