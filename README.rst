@@ -9,20 +9,9 @@ Install with pip::
 
     pip install django-multisite
 
-
 Or get the code via git::
 
-    git clone git://github.com/ecometrica/django-multisite.git django-multisite
-
-Then run::
-
-    python setup.py install
-
-Or add the django-multisite/multisite folder to your PYTHONPATH.
-
-If you wish to contribute, instead run::
-
-    python setup.py develop
+    git clone git://github.com/erikvw/django-multisite.git django-multisite
 
 
 Quickstart
@@ -60,7 +49,7 @@ Add to your settings.py TEMPLATES loaders in the OPTIONS section::
         ...
     ]
 
-Edit settings.py MIDDLEWARE (MIDDLEWARE_CLASSES for Django < 1.10)::
+Edit settings.py MIDDLEWARE::
 
     MIDDLEWARE = (
         ...
@@ -93,18 +82,6 @@ If you have set CACHE\_MULTISITE\_ALIAS to a custom value, *e.g.*
             ...
         },
     }
-
-
-Multisite determines the ALLOWED_HOSTS by checking all Alias domains.  You can
-also set the MULTISITE_EXTRA_HOSTS to include additional hosts.  This can
-include wildcards.::
-
-    MULTISITE_EXTRA_HOSTS = ['example.com']
-    # will match the single additional host
-
-    MULTISITE_EXTRA_HOSTS = ['.example.com']
-    # will match any host ending '.example.com'
-
 
 Development Environments
 ------------------------
