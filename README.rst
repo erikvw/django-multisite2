@@ -203,18 +203,7 @@ Tests
 
 To run the tests::
 
-    python setup.py test
-
-Or::
-
-    pytest
-
-Before deploying a change, to verify it has not broken anything by running::
-
-    tox
-
-This runs the tests under every supported combination of Django and Python.
-
+    python runtests.py
 
 
 
