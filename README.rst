@@ -1,7 +1,5 @@
-.. image:: https://travis-ci.org/ecometrica/django-multisite.svg?branch=master
-    :target: https://travis-ci.org/ecometrica/django-multisite?branch=master
-.. image:: https://coveralls.io/repos/github/ecometrica/django-multisite/badge.svg?branch=master
-    :target: https://coveralls.io/github/ecometrica/django-multisite?branch=master
+|pypi| |actions| |codecov| |downloads| |maintainability| |black|
+
 
 
 README
@@ -9,22 +7,7 @@ README
 
 Install with pip::
 
-    pip install django-multisite
-
-
-Or get the code via git::
-
-    git clone git://github.com/ecometrica/django-multisite.git django-multisite
-
-Then run::
-
-    python setup.py install
-
-Or add the django-multisite/multisite folder to your PYTHONPATH.
-
-If you wish to contribute, instead run::
-
-    python setup.py develop
+    pip install django-multisite2
 
 
 Quickstart
@@ -62,7 +45,7 @@ Add to your settings.py TEMPLATES loaders in the OPTIONS section::
         ...
     ]
 
-Edit settings.py MIDDLEWARE (MIDDLEWARE_CLASSES for Django < 1.10)::
+Edit settings.py MIDDLEWARE::
 
     MIDDLEWARE = (
         ...
@@ -95,18 +78,6 @@ If you have set CACHE\_MULTISITE\_ALIAS to a custom value, *e.g.*
             ...
         },
     }
-
-
-Multisite determines the ALLOWED_HOSTS by checking all Alias domains.  You can
-also set the MULTISITE_EXTRA_HOSTS to include additional hosts.  This can
-include wildcards.::
-
-    MULTISITE_EXTRA_HOSTS = ['example.com']
-    # will match the single additional host
-
-    MULTISITE_EXTRA_HOSTS = ['.example.com']
-    # will match any host ending '.example.com'
-
 
 Development Environments
 ------------------------
@@ -205,14 +176,27 @@ Tests
 
 To run the tests::
 
-    python setup.py test
+    python runtests.py
 
-Or::
 
-    pytest
 
-Before deploying a change, to verify it has not broken anything by running::
+.. |pypi| image:: https://img.shields.io/pypi/v/django-multisite.svg
+    :target: https://pypi.python.org/pypi/django-multisite
 
-    tox
+.. |actions| image:: https://github.com/erikvw/django-multisite/actions/workflows/build.yml/badge.svg
+  :target: https://github.com/erikvw/django-multisite/actions/workflows/build.yml
 
-This runs the tests under every supported combination of Django and Python.
+.. |codecov| image:: https://codecov.io/gh/erikvw/django-multisite/branch/develop/graph/badge.svg
+  :target: https://codecov.io/gh/erikvw/django-multisite
+
+.. |downloads| image:: https://pepy.tech/badge/django-multisite
+   :target: https://pepy.tech/project/django-multisite
+
+.. |maintainability| image:: https://api.codeclimate.com/v1/badges/d280e92995a883a4f8db/maintainability
+   :target: https://codeclimate.com/github/erikvw/django-multisite/maintainability
+   :alt: Maintainability
+
+.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/ambv/black
+   :alt: Code Style
+

@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import logging
-import os
 import tempfile
 
 import tldextract
@@ -13,14 +12,12 @@ class Command(BaseCommand):
     def handle(self, **options):
         self.setup_logging(verbosity=options.get("verbosity", 1))
 
-        filename = getattr(
-            settings,
-            "MULTISITE_PUBLIC_SUFFIX_LIST_CACHE",
-            os.path.join(tempfile.gettempdir(), "multisite_tld.dat"),
+        cache_dir = getattr(
+            settings, "MULTISITE_PUBLIC_SUFFIX_LIST_CACHE_DIR", tempfile.gettempdir()
         )
-        self.log("Updating {filename}".format(filename=filename))
+        self.log("Updating {cache_dir}".format(cache_dir=cache_dir))
 
-        extract = tldextract.TLDExtract(cache_file=filename)
+        extract = tldextract.TLDExtract(cache_dir=cache_dir)
         extract.update(fetch_now=True)
         self.log("Done.")
 

@@ -2,6 +2,10 @@
 Release Notes
 =============
 
+2.0.1
+-----
+- change rel.to to related_model (Django 4.2)
+
 1.9.0
 -----
 

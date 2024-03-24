@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 default=False,
                 editable=False,
                 help_text="Does this domain name match the one in site?",
-                validators=[multisite.models.validate_true_or_none],
+                validators=[multisite.models.validators.validate_true_or_none],
                 verbose_name="is canonical?",
             ),
         ),

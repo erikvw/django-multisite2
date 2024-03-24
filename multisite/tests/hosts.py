@@ -1,10 +1,16 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import annotations
 
 from django.utils.functional import SimpleLazyObject, empty
 
-__ALL__ = ("ALLOWED_HOSTS", "AllowedHosts")
+__all__ = ["ALLOWED_HOSTS", "AllowedHosts"]
 
 _wrapped_default = empty
+
+
+def get_multisite_extra_hosts():
+    from django.conf import settings
+
+    return getattr(settings, "MULTISITE_EXTRA_HOSTS", [])
 
 
 class IterableLazyObject(SimpleLazyObject):
@@ -20,12 +26,9 @@ class AllowedHosts(object):
     alias_model = None
 
     def __init__(self):
-        from django.conf import settings
-
-        self.extra_hosts = getattr(settings, "MULTISITE_EXTRA_HOSTS", [])
-
+        self.extra_hosts = get_multisite_extra_hosts()
         if self.alias_model is None:
-            from .models import Alias
+            from multisite.models import Alias
 
             self.alias_model = Alias
 

@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
                     "is_canonical",
                     models.NullBooleanField(
                         default=None,
-                        validators=[multisite.models.validate_true_or_none],
+                        validators=[multisite.models.validators.validate_true_or_none],
                         editable=False,
                         help_text="Does this domain name match the one in site?",
                         verbose_name="is canonical?",
