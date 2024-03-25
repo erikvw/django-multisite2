@@ -154,11 +154,11 @@ run::
 
 Post-migrate signal: post_migrate_sync_alias
 --------------------------------------------
-The `post-migrate` signal `post_migrate_sync_alias` is registered in the `apps.py`. `post_migrate_sync_alias`
-ensures the `domain` in multisite's `Alias` model is updated to match that of django's `Site` model. This signal must
-run AFTER any `post-migrate` signals that manipulate Django's `Site` model. If you have an app that manipulates Django's
-`Site` model, place it before `multisite` in `settings. INSTALLED_APPS`. If this is not possible, you may configure `multisite`
-to not connect the `post-migrate` signal in `apps.py` so that you can do it somewhere else in your code.
+The ``post-migrate`` signal ``post_migrate_sync_alias`` is registered in the ``apps.py``. ``post_migrate_sync_alias``
+ensures the ``domain`` in multisite's ``Alias`` model is updated to match that of django's ``Site`` model. This signal must
+run AFTER any ``post-migrate`` signals that manipulate Django's ``Site`` model. If you have an app that manipulates Django's
+``Site`` model, place it before ``multisite`` in `settings. INSTALLED_APPS`. If this is not possible, you may configure ``multisite``
+to not connect the ``post-migrate`` signal in ``apps.py`` so that you can do it somewhere else in your code.
 
 To configure `multisite` to not connect the `post-post_migrate_sync_alias` in the `apps.py`, update your settings::
 
