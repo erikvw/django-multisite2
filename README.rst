@@ -27,24 +27,6 @@ Add these to your INSTALLED_APPS::
         ...
     ]
 
-Add to your settings.py TEMPLATES loaders in the OPTIONS section::
-
-    TEMPLATES = [
-        ...
-        {
-            ...
-            'DIRS': {...}
-            'OPTIONS': {
-                'loaders': (
-                    'multisite.template.loaders.filesystem.Loader',
-                    'django.template.loaders.app_directories.Loader',
-                )
-            }
-            ...
-        }
-        ...
-    ]
-
 Edit settings.py MIDDLEWARE::
 
     MIDDLEWARE = (
