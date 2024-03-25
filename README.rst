@@ -189,7 +189,7 @@ To run the tests::
 .. |downloads| image:: https://pepy.tech/badge/django-multisite2
    :target: https://pepy.tech/project/django-multisite2
 
-.. |maintainability| image:: https://api.codeclimate.com/v1/badges/d280e92995a883a4f8db/maintainability
+.. |maintainability| image:: https://api.codeclimate.com/v1/badges/4992e131641fc6929b1a/maintainability
    :target: https://codeclimate.com/github/erikvw/django-multisite2/maintainability
    :alt: Maintainability
 
