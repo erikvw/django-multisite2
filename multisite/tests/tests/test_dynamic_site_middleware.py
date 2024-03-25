@@ -9,7 +9,7 @@ from multisite.exceptions import MultisiteCacheError, MultisiteError
 from multisite.middleware import DynamicSiteMiddleware
 from multisite.models import Alias
 
-from ..get_allowed_hosts import get_allowed_hosts
+from ..get_test_allowed_hosts import get_test_allowed_hosts
 from ..get_test_http_response import get_test_http_response
 from .request_factory import RequestFactory
 
@@ -23,7 +23,7 @@ from .request_factory import RequestFactory
         "multisite": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
     },
     MULTISITE_FALLBACK=None,
-    ALLOWED_HOSTS=get_allowed_hosts("example.com", "anothersite.example", replace=True),
+    ALLOWED_HOSTS=get_test_allowed_hosts("example.com", "anothersite.example", replace=True),
 )
 class DynamicSiteMiddlewareTest(TestCase):
     def setUp(self):
@@ -232,7 +232,7 @@ class DynamicSiteMiddlewareSettingsTest(TestCase):
     CACHE_MULTISITE_ALIAS="multisite",
     CACHES={"multisite": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
     MULTISITE_FALLBACK=None,
-    ALLOWED_HOSTS=get_allowed_hosts("example.com", replace=True),
+    ALLOWED_HOSTS=get_test_allowed_hosts("example.com", replace=True),
 )
 class CacheTest(TestCase):
     def setUp(self):

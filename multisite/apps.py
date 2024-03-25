@@ -1,4 +1,5 @@
 from django.apps import AppConfig as DjangoAppConfig
+from django.conf import settings
 from django.db.models.signals import post_migrate
 
 from multisite.hacks import use_framework_for_site_cache
@@ -20,9 +21,9 @@ class AppConfig(DjangoAppConfig):
         super().import_models()
 
     def ready(self):
-
-        post_migrate.connect(
-            post_migrate_sync_alias,
-            sender=self,
-            dispatch_uid="django.contrib.auth.management.create_permissions",
-        )
+        if not getattr(settings, "MULTISITE_REGISTER_POST_MIGRATE_SYNC_ALIAS", True):
+            post_migrate.connect(
+                post_migrate_sync_alias,
+                sender=self,
+                dispatch_uid="multisite.post_migrate_sync_alias",
+            )
