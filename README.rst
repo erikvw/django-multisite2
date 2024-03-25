@@ -195,8 +195,8 @@ To run the tests::
 
 
 
-.. |pypi| image:: https://img.shields.io/pypi/v/django-multisite.svg
-    :target: https://pypi.python.org/pypi/django-multisite
+.. |pypi| image:: https://img.shields.io/pypi/v/django-multisite2.svg
+    :target: https://pypi.python.org/pypi/django-multisite2
 
 .. |actions| image:: https://github.com/erikvw/django-multisite/actions/workflows/build.yml/badge.svg
   :target: https://github.com/erikvw/django-multisite/actions/workflows/build.yml
