@@ -7,7 +7,7 @@ from django.test import TestCase, override_settings
 from multisite.exceptions import MultisiteCookieDomainDepthError
 from multisite.middleware import CookieDomainMiddleware
 
-from ..get_allowed_hosts import get_allowed_hosts
+from ..get_test_allowed_hosts import get_test_allowed_hosts
 from ..get_test_http_response import get_test_http_response
 from .request_factory import RequestFactory
 
@@ -15,7 +15,7 @@ from .request_factory import RequestFactory
 @override_settings(
     MULTISITE_COOKIE_DOMAIN_DEPTH=0,
     MULTISITE_PUBLIC_SUFFIX_LIST_CACHE_DIR=None,
-    ALLOWED_HOSTS=get_allowed_hosts(".com"),
+    ALLOWED_HOSTS=get_test_allowed_hosts(".com"),
     MULTISITE_EXTRA_HOSTS=[".extrahost.com"],
 )
 class TestCookieDomainMiddleware(TestCase):
@@ -90,7 +90,7 @@ class TestCookieDomainMiddleware(TestCase):
         response = CookieDomainMiddleware(http_response)(request)
         self.assertEqual(list(response.cookies.values()), [response.cookies["a"]])
 
-    @override_settings(ALLOWED_HOSTS=get_allowed_hosts("192.0.43.10"))
+    @override_settings(ALLOWED_HOSTS=get_test_allowed_hosts("192.0.43.10"))
     def test_ip_address(self):
         """Assert IP addresses not be mutated."""
         http_response = get_test_http_response(dict(key="a", value="a", domain=None))
@@ -98,7 +98,9 @@ class TestCookieDomainMiddleware(TestCase):
         response = CookieDomainMiddleware(http_response)(request)
         self.assertEqual(response.cookies["a"]["domain"], "")
 
-    @override_settings(ALLOWED_HOSTS=get_allowed_hosts("localhost", "localhost.localdomain"))
+    @override_settings(
+        ALLOWED_HOSTS=get_test_allowed_hosts("localhost", "localhost.localdomain")
+    )
     def test_localpath(self):
         """Assert local domains not mutated."""
         http_response = get_test_http_response(dict(key="a", value="a", domain=None))
@@ -110,7 +112,7 @@ class TestCookieDomainMiddleware(TestCase):
         response = CookieDomainMiddleware(http_response)(request)
         self.assertEqual(response.cookies["a"]["domain"], "")
 
-    @override_settings(ALLOWED_HOSTS=get_allowed_hosts("ai", "www.ai"))
+    @override_settings(ALLOWED_HOSTS=get_test_allowed_hosts("ai", "www.ai"))
     def test_simple_tld(self):
         """Assert top-level domains are not mutated."""
         http_response = get_test_http_response(dict(key="a", value="a", domain=None))
@@ -122,7 +124,7 @@ class TestCookieDomainMiddleware(TestCase):
         response = CookieDomainMiddleware(http_response)(request)
         self.assertEqual(response.cookies["a"]["domain"], ".www.ai")
 
-    @override_settings(ALLOWED_HOSTS=get_allowed_hosts("com.ai", "nic.com.ai"))
+    @override_settings(ALLOWED_HOSTS=get_test_allowed_hosts("com.ai", "nic.com.ai"))
     def test_effective_tld(self):
         """Assert effective top-level domains with a webserver are
         not mutated.
@@ -176,7 +178,8 @@ class TestCookieDomainMiddleware(TestCase):
         self.assertEqual(response.cookies["a"]["domain"], ".app.test3.example.com")
 
     @override_settings(
-        MULTISITE_COOKIE_DOMAIN_DEPTH=2, ALLOWED_HOSTS=get_allowed_hosts(".test.example.com")
+        MULTISITE_COOKIE_DOMAIN_DEPTH=2,
+        ALLOWED_HOSTS=get_test_allowed_hosts(".test.example.com"),
     )
     def test_wildcard_subdomains(self):
         """Assert at MULTISITE_COOKIE_DOMAIN_DEPTH 2, subdomains are

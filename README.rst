@@ -7,7 +7,7 @@ README
 
 Install with pip::
 
-    pip install django-multisite2
+    pip install django-multisite-edc
 
 
 Quickstart
@@ -170,6 +170,21 @@ run::
 .. _cross-domain cookies: http://en.wikipedia.org/wiki/HTTP_cookie#Domain_and_Path
 .. _Public Suffix List: http://publicsuffix.org/
 
+Post-migrate signal: post_migrate_sync_alias
+--------------------------------------------
+The `post-migrate` signal `post_migrate_sync_alias` is registered in the `apps.py`. `post_migrate_sync_alias`
+ensures the `domain` in multisite's `Alias` model is updated to match that of django's `Site` model. This signal must
+run AFTER any `post-migrate` signals that manipulate Django's `Site` model. If you have an app that manipulates Django's
+`Site` model, place it before `multisite` in `settings. INSTALLED_APPS`. If this is not possible, you may configure `multisite`
+to not connect the `post-migrate` signal in `apps.py` so that you can do it somewhere else in your code.
+
+To configure `multisite` to not connect the `post-post_migrate_sync_alias` in the `apps.py`, update your settings::
+
+    MULTISITE_REGISTER_POST_MIGRATE_SYNC_ALIAS = False
+
+With the `settings` attribute set to `False`, it is your responsibility to connect the signal in your code. Note that if you do not sync the `Alias` and `Site`
+models after the `Site` model has changed, multisite may not recognize the domain and switch to the fallback view or
+raise a `Http404` error.
 
 Tests
 -----

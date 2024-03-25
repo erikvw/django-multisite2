@@ -1,4 +1,4 @@
-def get_allowed_hosts(*extra, replace=None):
+def get_test_allowed_hosts(*extra, replace=None):
     if replace:
         allowed_hosts = []
     else:
