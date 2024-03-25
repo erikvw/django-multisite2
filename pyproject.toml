@@ -30,9 +30,3 @@ exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
 ]
-
-[tool.pytest.ini_options]
-django_find_project = false
-DJANGO_SETTINGS_MODULE = "multisite.tests.test_settings"
-python_files = "tests.py test_*.py *_tests.pyc"
-addopts = "--reuse-db"
