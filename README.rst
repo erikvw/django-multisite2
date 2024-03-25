@@ -5,20 +5,30 @@
 README
 ======
 
-Install with pip::
+Python 3.11+ Django 4.2+
+
+
+Installation
+============
+
+Install with pip:
+
+.. code-block:: bash
 
     pip install django-multisite2
 
 
-Quickstart
-----------
+Replace your ``SITE_ID`` in ``settings.py`` to:
 
-Replace your SITE_ID in settings.py to::
+.. code-block:: python
 
     from multisite import SiteID
     SITE_ID = SiteID(default=1)
 
-Add these to your INSTALLED_APPS::
+
+add to INSTALLED_APPS:
+
+.. code-block:: python
 
     INSTALLED_APPS = [
         ...
@@ -27,7 +37,10 @@ Add these to your INSTALLED_APPS::
         ...
     ]
 
-Edit settings.py MIDDLEWARE::
+
+Edit settings.py MIDDLEWARE:
+
+.. code-block:: python
 
     MIDDLEWARE = (
         ...
@@ -35,6 +48,9 @@ Edit settings.py MIDDLEWARE::
         ...
     )
 
+
+Using a custom cache
+--------------------
 Append to settings.py, in order to use a custom cache that can be
 safely cleared::
 
@@ -60,24 +76,6 @@ If you have set CACHE\_MULTISITE\_ALIAS to a custom value, *e.g.*
             ...
         },
     }
-
-Development Environments
-------------------------
-Multisite returns a valid Alias when in "development mode" (defaulting to the
-alias associated with the default SiteID.
-
-Development mode is either:
-    - Running tests, i.e. manage.py test
-    - Running locally in settings.DEBUG = True, where the hostname is a top-level name, i.e. localhost
-
-In order to have multisite use aliases in local environments, add entries to
-your local etc/hosts file to match aliases in your applications.  E.g. ::
-
-    127.0.0.1 example.com
-    127.0.0.1 examplealias.com
-
-And access your application at example.com:8000 or examplealias.com:8000 instead of
-the usual localhost:8000.
 
 
 Domain fallbacks
@@ -167,6 +165,24 @@ To configure `multisite` to not connect the `post-post_migrate_sync_alias` in th
 With the `settings` attribute set to `False`, it is your responsibility to connect the signal in your code. Note that if you do not sync the `Alias` and `Site`
 models after the `Site` model has changed, multisite may not recognize the domain and switch to the fallback view or
 raise a `Http404` error.
+
+Development Environments
+------------------------
+Multisite returns a valid Alias when in "development mode" (defaulting to the
+alias associated with the default SiteID.
+
+Development mode is either:
+    - Running tests, i.e. manage.py test
+    - Running locally in settings.DEBUG = True, where the hostname is a top-level name, i.e. localhost
+
+In order to have multisite use aliases in local environments, add entries to
+your local etc/hosts file to match aliases in your applications.  E.g. ::
+
+    127.0.0.1 example.com
+    127.0.0.1 examplealias.com
+
+And access your application at example.com:8000 or examplealias.com:8000 instead of
+the usual localhost:8000.
 
 Tests
 -----
