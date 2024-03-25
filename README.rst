@@ -180,17 +180,17 @@ To run the tests::
 .. |pypi| image:: https://img.shields.io/pypi/v/django-multisite2.svg
     :target: https://pypi.python.org/pypi/django-multisite2
 
-.. |actions| image:: https://github.com/erikvw/django-multisite/actions/workflows/build.yml/badge.svg
-  :target: https://github.com/erikvw/django-multisite/actions/workflows/build.yml
+.. |actions| image:: https://github.com/erikvw/django-multisite2/actions/workflows/build.yml/badge.svg
+  :target: https://github.com/erikvw/django-multisite2/actions/workflows/build.yml
 
-.. |codecov| image:: https://codecov.io/gh/erikvw/django-multisite/branch/develop/graph/badge.svg
-  :target: https://codecov.io/gh/erikvw/django-multisite
+.. |codecov| image:: https://codecov.io/gh/erikvw/django-multisite2/branch/develop/graph/badge.svg
+  :target: https://codecov.io/gh/erikvw/django-multisite2
 
-.. |downloads| image:: https://pepy.tech/badge/django-multisite
-   :target: https://pepy.tech/project/django-multisite
+.. |downloads| image:: https://pepy.tech/badge/django-multisite2
+   :target: https://pepy.tech/project/django-multisite2
 
 .. |maintainability| image:: https://api.codeclimate.com/v1/badges/d280e92995a883a4f8db/maintainability
-   :target: https://codeclimate.com/github/erikvw/django-multisite/maintainability
+   :target: https://codeclimate.com/github/erikvw/django-multisite2/maintainability
    :alt: Maintainability
 
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
