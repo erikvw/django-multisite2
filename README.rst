@@ -13,14 +13,14 @@ Installation
 
 Install with pip:
 
-.. code-block:: bash
+.. code-block::
 
     pip install django-multisite2
 
 
 Replace your ``SITE_ID`` in ``settings.py`` to:
 
-.. code-block:: python
+.. code-block::
 
     from multisite import SiteID
     SITE_ID = SiteID(default=1)
@@ -28,7 +28,7 @@ Replace your ``SITE_ID`` in ``settings.py`` to:
 
 add to INSTALLED_APPS:
 
-.. code-block:: python
+.. code-block::
 
     INSTALLED_APPS = [
         ...
@@ -40,7 +40,7 @@ add to INSTALLED_APPS:
 
 Edit settings.py MIDDLEWARE:
 
-.. code-block:: python
+.. code-block::
 
     MIDDLEWARE = (
         ...
