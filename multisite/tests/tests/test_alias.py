@@ -69,7 +69,6 @@ class AliasTest(TestCase):
             "<Alias: %(domain)s -> %(domain)s>" % site.__dict__,
         )
 
-    @tag("1")
     def test_managers(self):
         site = Site.objects.create(domain="example.com")
         Alias.objects.create(site=site, domain="example.org")

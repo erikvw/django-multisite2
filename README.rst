@@ -5,20 +5,34 @@
 README
 ======
 
-Install with pip::
+Python 3.11+ Django 4.2+
 
-    pip install django-multisite-edc
+Older versions of Django are supported by the original `django-multisite`_ project.
+
+.. _django-multisite: https://github.com/ecometrica/django-multisite
 
 
-Quickstart
-----------
+Installation
+============
 
-Replace your SITE_ID in settings.py to::
+Install with pip:
+
+.. code-block::
+
+    pip install django-multisite2
+
+
+Replace your ``SITE_ID`` in ``settings.py`` to:
+
+.. code-block::
 
     from multisite import SiteID
     SITE_ID = SiteID(default=1)
 
-Add these to your INSTALLED_APPS::
+
+add to INSTALLED_APPS:
+
+.. code-block::
 
     INSTALLED_APPS = [
         ...
@@ -27,25 +41,10 @@ Add these to your INSTALLED_APPS::
         ...
     ]
 
-Add to your settings.py TEMPLATES loaders in the OPTIONS section::
 
-    TEMPLATES = [
-        ...
-        {
-            ...
-            'DIRS': {...}
-            'OPTIONS': {
-                'loaders': (
-                    'multisite.template.loaders.filesystem.Loader',
-                    'django.template.loaders.app_directories.Loader',
-                )
-            }
-            ...
-        }
-        ...
-    ]
+Edit settings.py MIDDLEWARE:
 
-Edit settings.py MIDDLEWARE::
+.. code-block::
 
     MIDDLEWARE = (
         ...
@@ -53,6 +52,9 @@ Edit settings.py MIDDLEWARE::
         ...
     )
 
+
+Using a custom cache
+--------------------
 Append to settings.py, in order to use a custom cache that can be
 safely cleared::
 
@@ -78,24 +80,6 @@ If you have set CACHE\_MULTISITE\_ALIAS to a custom value, *e.g.*
             ...
         },
     }
-
-Development Environments
-------------------------
-Multisite returns a valid Alias when in "development mode" (defaulting to the
-alias associated with the default SiteID.
-
-Development mode is either:
-    - Running tests, i.e. manage.py test
-    - Running locally in settings.DEBUG = True, where the hostname is a top-level name, i.e. localhost
-
-In order to have multisite use aliases in local environments, add entries to
-your local etc/hosts file to match aliases in your applications.  E.g. ::
-
-    127.0.0.1 example.com
-    127.0.0.1 examplealias.com
-
-And access your application at example.com:8000 or examplealias.com:8000 instead of
-the usual localhost:8000.
 
 
 Domain fallbacks
@@ -172,11 +156,11 @@ run::
 
 Post-migrate signal: post_migrate_sync_alias
 --------------------------------------------
-The `post-migrate` signal `post_migrate_sync_alias` is registered in the `apps.py`. `post_migrate_sync_alias`
-ensures the `domain` in multisite's `Alias` model is updated to match that of django's `Site` model. This signal must
-run AFTER any `post-migrate` signals that manipulate Django's `Site` model. If you have an app that manipulates Django's
-`Site` model, place it before `multisite` in `settings. INSTALLED_APPS`. If this is not possible, you may configure `multisite`
-to not connect the `post-migrate` signal in `apps.py` so that you can do it somewhere else in your code.
+The ``post-migrate`` signal ``post_migrate_sync_alias`` is registered in the ``apps.py``. ``post_migrate_sync_alias``
+ensures the ``domain`` in multisite's ``Alias`` model is updated to match that of django's ``Site`` model. This signal must
+run AFTER any ``post-migrate`` signals that manipulate Django's ``Site`` model. If you have an app that manipulates Django's
+``Site`` model, place it before ``multisite`` in `settings. INSTALLED_APPS`. If this is not possible, you may configure ``multisite``
+to not connect the ``post-migrate`` signal in ``apps.py`` so that you can do it somewhere else in your code.
 
 To configure `multisite` to not connect the `post-post_migrate_sync_alias` in the `apps.py`, update your settings::
 
@@ -185,6 +169,24 @@ To configure `multisite` to not connect the `post-post_migrate_sync_alias` in th
 With the `settings` attribute set to `False`, it is your responsibility to connect the signal in your code. Note that if you do not sync the `Alias` and `Site`
 models after the `Site` model has changed, multisite may not recognize the domain and switch to the fallback view or
 raise a `Http404` error.
+
+Development Environments
+------------------------
+Multisite returns a valid Alias when in "development mode" (defaulting to the
+alias associated with the default SiteID.
+
+Development mode is either:
+    - Running tests, i.e. manage.py test
+    - Running locally in settings.DEBUG = True, where the hostname is a top-level name, i.e. localhost
+
+In order to have multisite use aliases in local environments, add entries to
+your local etc/hosts file to match aliases in your applications.  E.g. ::
+
+    127.0.0.1 example.com
+    127.0.0.1 examplealias.com
+
+And access your application at example.com:8000 or examplealias.com:8000 instead of
+the usual localhost:8000.
 
 Tests
 -----
@@ -195,20 +197,20 @@ To run the tests::
 
 
 
-.. |pypi| image:: https://img.shields.io/pypi/v/django-multisite.svg
-    :target: https://pypi.python.org/pypi/django-multisite
+.. |pypi| image:: https://img.shields.io/pypi/v/django-multisite2.svg
+    :target: https://pypi.python.org/pypi/django-multisite2
 
-.. |actions| image:: https://github.com/erikvw/django-multisite/actions/workflows/build.yml/badge.svg
-  :target: https://github.com/erikvw/django-multisite/actions/workflows/build.yml
+.. |actions| image:: https://github.com/erikvw/django-multisite2/actions/workflows/build.yml/badge.svg
+  :target: https://github.com/erikvw/django-multisite2/actions/workflows/build.yml
 
-.. |codecov| image:: https://codecov.io/gh/erikvw/django-multisite/branch/develop/graph/badge.svg
-  :target: https://codecov.io/gh/erikvw/django-multisite
+.. |codecov| image:: https://codecov.io/gh/erikvw/django-multisite2/branch/develop/graph/badge.svg
+  :target: https://codecov.io/gh/erikvw/django-multisite2
 
-.. |downloads| image:: https://pepy.tech/badge/django-multisite
-   :target: https://pepy.tech/project/django-multisite
+.. |downloads| image:: https://pepy.tech/badge/django-multisite2
+   :target: https://pepy.tech/project/django-multisite2
 
-.. |maintainability| image:: https://api.codeclimate.com/v1/badges/d280e92995a883a4f8db/maintainability
-   :target: https://codeclimate.com/github/erikvw/django-multisite/maintainability
+.. |maintainability| image:: https://api.codeclimate.com/v1/badges/4992e131641fc6929b1a/maintainability
+   :target: https://codeclimate.com/github/erikvw/django-multisite2/maintainability
    :alt: Maintainability
 
 .. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg

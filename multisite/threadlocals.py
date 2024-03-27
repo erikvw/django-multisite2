@@ -4,19 +4,6 @@ from threading import local
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-_thread_locals = local()
-
-
-# def get_request():
-#     return getattr(_thread_locals, "request", None)
-
-
-# class ThreadLocalsMiddleware(MiddlewareMixin):
-#     """Middleware that saves request in thread local storage"""
-#
-#     def process_request(self, request):
-#         _thread_locals.request = request
-
 
 class SiteID(local):
     """

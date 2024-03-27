@@ -8,6 +8,7 @@ _version.py
 *.pyo
 .cache/
 .eggs/
+*.egg-info/
 .installed.cfg
 bin
 develop-eggs
