@@ -1,3 +1,30 @@
+Metadata-Version: 2.1
+Name: django-multisite2
+Version: 2.1.2.dev8+g3972af2.d20240325
+Summary: Serve multiple sites from a single Django application
+Home-page: http://github.com/erikvw/django-multisite
+Author: Leonid S Shestera
+Author-email: leonid@shestera.ru
+Maintainer: Ecometrica
+Maintainer-email: dev@ecometrica.com
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Web Environment
+Classifier: Framework :: Django
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Internet
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Software Development :: Libraries
+Classifier: Topic :: Utilities
+Requires-Python: >=3.11
+Description-Content-Type: text/x-rst
+License-File: LICENSE
+Requires-Dist: tldextract
+
 |pypi| |actions| |codecov| |downloads| |maintainability| |black|
 
 
