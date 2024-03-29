@@ -4,6 +4,8 @@ from threading import local
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
+_thread_locals = local()
+
 
 class SiteID(local):
     """

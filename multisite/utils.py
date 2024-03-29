@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from typing import TYPE_CHECKING, Callable
 
 from django.apps import apps as django_apps
@@ -89,12 +90,18 @@ def create_or_sync_missing_canonical_from_site_domain(apps: AppConfig | None = N
         create_or_sync_alias_from_site(site=site, apps=apps)
 
 
-def create_or_sync_canonical_from_all_sites(apps: AppConfig | None = None) -> None:
+def create_or_sync_canonical_from_all_sites(
+    apps: AppConfig | None = None, verbose: bool | None = None
+) -> None:
     """Create or sync canonical Alias objects from all Site objects.
 
     Renamed canonical manager method ``sync_all``.
     """
+    if verbose:
+        sys.stdout.write("  * Syncing canonical from site domain ...     \n")
     sync_canonical_from_site_domain(apps=apps)
+    if verbose:
+        sys.stdout.write("  * Syncing missing canonical from site domain ...     \n")
     create_or_sync_missing_canonical_from_site_domain(apps=apps)
 
 
