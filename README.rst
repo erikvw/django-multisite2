@@ -1,4 +1,4 @@
-|pypi| |actions| |codecov| |downloads| |maintainability| |black|
+ |actions| |codecov| |downloads| |maintainability| |black|
 
 
 
@@ -198,7 +198,7 @@ To run the tests::
 
 
 .. |pypi| image:: https://img.shields.io/pypi/v/django-multisite2.svg
-    :target: https://pypi.python.org/pypi/django-multisite2
+  :target: https://pypi.python.org/pypi/django-multisite2
 
 .. |actions| image:: https://github.com/erikvw/django-multisite2/actions/workflows/build.yml/badge.svg
   :target: https://github.com/erikvw/django-multisite2/actions/workflows/build.yml
