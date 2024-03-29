@@ -19,7 +19,7 @@ Install with pip:
 
 .. code-block::
 
-    pip install django-multisite2
+    pip install django-multisite2 (no release yet)
 
 
 Replace your ``SITE_ID`` in ``settings.py`` to:
