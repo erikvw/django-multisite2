@@ -51,9 +51,8 @@ class DynamicSiteMiddleware:
         post_delete.connect(self.site_deleted_hook, sender=Site)
 
     def __call__(self, request):
-        response = self.get_response(request)
         # if 500 here -> Site ObjectDoesNotExist was raised by get_current_site()
-        debug_check_status_code(response, request=request)
+        # debug_check_status_code(response, request=request)
         try:
             netloc = request.get_host().lower()
         except DisallowedHost as e:
@@ -66,7 +65,7 @@ class DynamicSiteMiddleware:
                 # found Alias
                 self.cache.set(cache_key, alias)
                 settings.SITE_ID.set(alias.site_id)
-                response = self.redirect_to_canonical(request, response, alias)
+                response = self.redirect_to_canonical(request, alias)
             elif (alias := self.get_alias(netloc)) is None:
                 # Cache missed, fallback using settings.MULTISITE_FALLBACK
                 debug_raise_cache_missed_exception(netloc, alias)
@@ -77,17 +76,21 @@ class DynamicSiteMiddleware:
                 self.cache.set(cache_key, alias)
                 settings.SITE_ID.set(alias.site_id)
                 SITE_CACHE[settings.SITE_ID] = alias.site  # Pre-populate SITE_CACHE
-                response = self.redirect_to_canonical(request, response, alias)
-                debug_check_status_code(response, netloc=netloc, alias=alias, site=alias.site)
-        return response
+                response = self.redirect_to_canonical(request, alias)
+                # debug_check_status_code(response, netloc=netloc, alias=alias, site=alias.site)
+        return response or self.get_response(request)
 
     @staticmethod
-    def redirect_to_canonical(request, response, alias: Alias) -> HttpResponse:
+    def redirect_to_canonical(request, alias: Alias) -> HttpResponse | None:
         if not alias.redirect_to_canonical or alias.is_canonical:
-            return response
-        url = urlsplit(request.build_absolute_uri(request.get_full_path()))
-        url = urlunsplit((url.scheme, alias.site.domain, url.path, url.query, url.fragment))
-        return HttpResponsePermanentRedirect(url)
+            response = None
+        else:
+            url = urlsplit(request.build_absolute_uri(request.get_full_path()))
+            url = urlunsplit(
+                (url.scheme, alias.site.domain, url.path, url.query, url.fragment)
+            )
+            response = HttpResponsePermanentRedirect(url)
+        return response
 
     def get_cache_key(self, netloc):
         """Returns a cache key based on ``netloc``."""
