@@ -4,6 +4,8 @@ from threading import local
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
+from multisite.exceptions import MultisiteError
+
 
 class SiteID(local):
     """
@@ -17,13 +19,15 @@ class SiteID(local):
     when combined with the appropriate middleware.
     """
 
-    def __init__(self, default=None, *args, **kwargs):
+    def __init__(self, default: int | None = None, *args, **kwargs):
         """
         ``default``, if specified, determines the default SITE_ID,
         if that is unset.
         """
         if default is not None and not isinstance(default, int):
-            raise ValueError("%r is not a valid default." % default)
+            raise MultisiteError(
+                f"Invalid default value for SITE_ID. See settings.SITE_ID. Got `{default}`."
+            )
         self.default = default
         self.reset()
 
@@ -100,7 +104,7 @@ class SiteID(local):
     def get_default(self):
         """Returns the default SITE_ID."""
         if self.default is None:
-            raise ValueError("SITE_ID has not been set.")
+            raise MultisiteError("SITE_ID default has not been set. See settings.SITE_ID.")
         return self.default
 
 

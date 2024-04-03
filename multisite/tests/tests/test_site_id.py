@@ -2,6 +2,7 @@ from django.contrib.sites.models import Site
 from django.test import TestCase
 
 from multisite import SiteID
+from multisite.exceptions import MultisiteError
 
 
 class TestSiteID(TestCase):
@@ -11,8 +12,8 @@ class TestSiteID(TestCase):
         self.site_id = SiteID()
 
     def test_invalid_default(self):
-        self.assertRaises(ValueError, SiteID, default="a")
-        self.assertRaises(ValueError, SiteID, default=self.site_id)
+        self.assertRaises(MultisiteError, SiteID, default="a")
+        self.assertRaises(MultisiteError, SiteID, default=self.site_id)
 
     def test_compare_default_site_id(self):
         self.site_id = SiteID(default=self.site.id)

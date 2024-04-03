@@ -9,6 +9,10 @@ class MultisiteSiteDoesNotExist(Exception):
     pass
 
 
+class MultisiteAliasDoesNotExist(Exception):
+    pass
+
+
 class MultisiteCacheError(Exception):
     pass
 

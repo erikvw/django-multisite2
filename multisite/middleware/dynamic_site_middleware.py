@@ -7,11 +7,12 @@ from django.conf import settings
 from django.contrib.sites.models import SITE_CACHE, Site
 from django.core import mail
 from django.core.cache import caches
-from django.core.exceptions import DisallowedHost
+from django.core.exceptions import DisallowedHost, ObjectDoesNotExist
 from django.db.models.signals import post_delete, post_init, pre_save
 from django.http import HttpResponse, HttpResponsePermanentRedirect
 
 from ..exceptions import (
+    MultisiteAliasDoesNotExist,
     MultisiteError,
     MultisiteInvalidHostError,
     debug_check_status_code,
@@ -170,11 +171,16 @@ class DynamicSiteMiddleware:
             try:
                 # Prefer the default SITE_ID
                 site_id = settings.SITE_ID.get_default()
-            except ValueError:
+            except MultisiteError:
                 # Fallback to the first Site object
                 alias = Alias.canonical.order_by("site")[0]
             else:
-                alias = Alias.canonical.get(site=site_id)
+                try:
+                    alias = Alias.canonical.get(site=site_id)
+                except ObjectDoesNotExist as e:
+                    raise MultisiteAliasDoesNotExist(
+                        f"Invalid default SITE_ID. See {settings}. Got `{e}` for SITE_ID=`{site_id}`."
+                    )
         return alias
 
     @classmethod
