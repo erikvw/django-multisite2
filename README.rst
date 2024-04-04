@@ -102,6 +102,9 @@ settings.py::
 
 Templates
 ---------
+
+This feature has been removed in version 2.0.0.
+
 If required, create template subdirectories for domain level templates (in a
 location specified in settings.TEMPLATES['DIRS'].
 
