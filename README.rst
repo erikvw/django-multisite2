@@ -1,4 +1,4 @@
- |actions| |codecov| |downloads| |maintainability| |black|
+|pypi| |actions| |codecov| |downloads| |maintainability| |black|
 
 
 
@@ -19,7 +19,7 @@ Install with pip:
 
 .. code-block::
 
-    pip install django-multisite2 (no release yet)
+    pip install django-multisite2
 
 
 Replace your ``SITE_ID`` in ``settings.py`` to:
@@ -102,6 +102,9 @@ settings.py::
 
 Templates
 ---------
+
+This feature has been removed in version 2.0.0.
+
 If required, create template subdirectories for domain level templates (in a
 location specified in settings.TEMPLATES['DIRS'].
 
