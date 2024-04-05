@@ -2,10 +2,11 @@
 Release Notes
 =============
 
-unreleased
-----------
-- change from VlaueError to multisite specific exceptions
+2.0.1
+-----
+- change from ValueError to multisite specific exceptions
   when getting default SITE_ID in development mode.
+- add typing hints
 
 2.0.0
 -----
