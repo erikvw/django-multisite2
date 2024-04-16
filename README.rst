@@ -12,7 +12,7 @@ For example, each urls below is an alias of the same server instance. With ``dja
     `https://harare.example.com` returns `settings.SITE_ID=10`
     `https://gaborone.example.com` returns `settings.SITE_ID=20`
     `https://kampala.example.com` returns `settings.SITE_ID=30`
-    `https://dar_es_salaam.example.com` returns `settings.SITE_ID=40`
+    `https://dar-es-salaam.example.com` returns `settings.SITE_ID=40`
 
 Python 3.11+ Django 4.2+
 
