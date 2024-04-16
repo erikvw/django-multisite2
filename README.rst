@@ -2,8 +2,8 @@
 
 
 
-README
-======
+django_multisite2
+=================
 
 With ``django_multisite2`` a single instance of a Django project can server multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
 
