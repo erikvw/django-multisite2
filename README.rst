@@ -5,11 +5,21 @@
 README
 ======
 
+With ``django_multisite2`` a single instance of a Django project can server multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
+
+For example::
+
+    `https://site10.example.com` returns `settings.SITE_ID=10`
+    `https://site20.example.com` returns `settings.SITE_ID=20`
+    `https://site30.example.com` returns `settings.SITE_ID=30`
+    `https://site40.example.com` returns `settings.SITE_ID=40`
+
 Python 3.11+ Django 4.2+
 
 Older versions of Django are supported by the original `django-multisite`_ project.
 
 .. _django-multisite: https://github.com/ecometrica/django-multisite
+
 
 
 Installation
