@@ -7,12 +7,23 @@ django_multisite2
 
 With ``django_multisite2`` a single instance of a Django project can server multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
 
-For example, each urls below is an alias of the same server instance. With ``django_multisite2`` you might have something like this::
+In settings replace the static ``SITE_ID`` with ``django_multisite2`` dynamic ``SiteID``::
 
-    `https://harare.example.com` returns `settings.SITE_ID=10`
-    `https://gaborone.example.com` returns `settings.SITE_ID=20`
-    `https://kampala.example.com` returns `settings.SITE_ID=30`
-    `https://dar-es-salaam.example.com` returns `settings.SITE_ID=40`
+    # settings.py
+    SITE_ID = SiteID(default=1)
+
+``SiteID`` behaves like an integer. When combined with ``django_multisite2`` middleware, ``SiteID`` will return the current ``SITE_ID`` based on the url. For example, each url below is an alias of the same server instance. With ``django_multisite2`` you might have something like this::
+
+    # https://harare.example.com
+    >>> from django.conf import settings
+    >>> settings.SITE_ID
+    10
+
+    # https://kampala.example.com
+    >>> from django.conf import settings
+    >>> settings.SITE_ID
+    20
+
 
 Python 3.11+ Django 4.2+
 
