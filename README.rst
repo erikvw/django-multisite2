@@ -25,7 +25,7 @@ the dynamic ``SiteID`` behaves like an integer. When combined with ``django_mult
     20
 
 
-Python 3.11+ Django 4.2+
+Python 3.11+ Django 4.2+. New releases are cut from the ``main`` branch.
 
 Older versions of Django are supported by the original `django-multisite`_ project.
 
