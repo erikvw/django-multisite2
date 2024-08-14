@@ -5,20 +5,15 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: build (Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }})
+    name: build (Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}, ${{ matrix.database-engine }})
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
         python-version: ['3.11', '3.12']
-        django-version: ['4.2', '5.0', 'dev']
-
-        exclude:
-          - python-version: '3.12'
-            django-version: '4.2'
-          - python-version: '3.11'
-            django-version: 'dev'
+        django-version: ['4.2', '5.0', '5.1', 'dev']
+        database-engine: ["mysql", "postgres"]
     services:
       mysql:
         image: mysql:latest
@@ -28,6 +23,17 @@ jobs:
         ports:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Install pycups and words dependency
@@ -68,8 +74,7 @@ jobs:
         env:
           DJANGO: ${{ matrix.django-version }}
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: erikvw/django-multisite2
+          name: Python ${{ matrix.python-version }}
