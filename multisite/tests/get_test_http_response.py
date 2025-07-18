@@ -1,4 +1,4 @@
-from typing import Callable, Type
+from typing import Callable
 
 from django.http import HttpResponse
 

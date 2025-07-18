@@ -1,13 +1,10 @@
 import logging
-import os
 import tempfile
 from io import StringIO
-from pathlib import Path
 from unittest import mock
 
 from django.core.management import call_command
-from django.template.loader import get_template
-from django.test import TestCase, override_settings, tag
+from django.test import TestCase
 
 
 class UpdatePublicSuffixListCommandTestCase(TestCase):

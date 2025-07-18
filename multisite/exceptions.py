@@ -40,7 +40,8 @@ class MultisiteCookieDomainDepthError(Exception):
 def debug_raise_disallowed_host_exception(e):
     if getattr(settings, "MULTISITE_DEBUG", None):
         raise MultisiteDisallowedHost(
-            f"DisallowedHost. To silence this exception, set MULTISITE_DEBUG=False. Got {e}."
+            "DisallowedHost. To silence this exception, "
+            f"set MULTISITE_DEBUG=False. Got {e}."
         )
 
 

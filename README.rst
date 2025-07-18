@@ -5,7 +5,7 @@
 django_multisite2
 =================
 
-With ``django_multisite2`` a single instance of a Django project can server multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
+With ``django_multisite2`` a single instance of a Django project can serve multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
 
 In ``settings``, the static ``SITE_ID`` is replaced with ``django_multisite2`` dynamic ``SiteID``::
 
@@ -28,9 +28,6 @@ the dynamic ``SiteID`` behaves like an integer. When combined with ``django_mult
 Python 3.11+ Django 4.2+. New releases are cut from the ``main`` branch.
 
 Older versions of Django are supported by the original `django-multisite`_ project.
-
-.. _django-multisite: https://github.com/ecometrica/django-multisite
-
 
 
 Installation
@@ -141,12 +138,10 @@ optional MULTISITE_DEFAULT_TEMPLATE_DIR setting, e.g.::
     templates/multisite_templates
 
 
-Cross-domain cookies
---------------------
+Cross-domain cookie support
+---------------------------
 
-In order to support `cross-domain cookies`_,
-for purposes like single-sign-on,
-prepend the following to the top of
+In order to support `cross-domain cookies`_ , for purposes like single-sign-on, prepend the following to the top of
 settings.py MIDDLEWARE (MIDDLEWARE_CLASSES for Django < 1.10)::
 
     MIDDLEWARE = (
@@ -175,8 +170,6 @@ run::
 
     manage.py update_public_suffix_list
 
-.. _cross-domain cookies: http://en.wikipedia.org/wiki/HTTP_cookie#Domain_and_Path
-.. _Public Suffix List: http://publicsuffix.org/
 
 Post-migrate signal: post_migrate_sync_alias
 --------------------------------------------
@@ -219,7 +212,9 @@ To run the tests::
 
     python runtests.py
 
-
+.. _django-multisite: https://github.com/ecometrica/django-multisite
+.. _cross-domain cookies: http://en.wikipedia.org/wiki/HTTP_cookie#Domain_and_Path
+.. _Public Suffix List: http://publicsuffix.org/
 
 .. |pypi| image:: https://img.shields.io/pypi/v/django-multisite2.svg
   :target: https://pypi.python.org/pypi/django-multisite2

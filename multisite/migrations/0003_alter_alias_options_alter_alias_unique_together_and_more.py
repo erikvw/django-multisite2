@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("multisite", "0002_alter_alias_id_alter_alias_is_canonical"),
         ("sites", "0002_alter_domain_unique"),

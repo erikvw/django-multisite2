@@ -11,7 +11,7 @@ Release Notes
 2.0.0
 -----
  - major refactor, drop support for lower than py 3.11 and DJ4.2
- - drop pytest, use unitests / runtests.py 
+ - drop pytest, use unitests / runtests.py
  - replace rel.to with related_model (Django 4.2)
  - remove deprecated `process_requests`
  - add more specific exception handling

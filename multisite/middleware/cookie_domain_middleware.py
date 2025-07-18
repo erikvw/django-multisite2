@@ -25,11 +25,13 @@ class CookieDomainMiddleware:
             self.depth = int(get_cookie_domain_depth())
         except ValueError:
             raise MultisiteCookieDomainDepthError(
-                f"Invalid MULTISITE_COOKIE_DOMAIN_DEPTH. Got {get_cookie_domain_depth()}"
+                "Invalid MULTISITE_COOKIE_DOMAIN_DEPTH. "
+                f"Got {get_cookie_domain_depth()}"
             )
         if self.depth < 0:
             raise MultisiteCookieDomainDepthError(
-                f"Invalid MULTISITE_COOKIE_DOMAIN_DEPTH. Got {get_cookie_domain_depth()}"
+                "Invalid MULTISITE_COOKIE_DOMAIN_DEPTH. "
+                f"Got {get_cookie_domain_depth()}"
             )
         self.psl_cache_dir = get_public_suffix_list_cache_dir()
         if self.psl_cache_dir is None:

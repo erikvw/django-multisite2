@@ -15,7 +15,6 @@ from ..exceptions import (
     MultisiteAliasDoesNotExist,
     MultisiteError,
     MultisiteInvalidHostError,
-    debug_check_status_code,
     debug_raise_cache_missed_exception,
     debug_raise_disallowed_host_exception,
 )
@@ -36,7 +35,7 @@ class DynamicSiteMiddleware:
         self.get_response = get_response
         if not hasattr(settings.SITE_ID, "set"):
             raise MultisiteError(
-                "Invalid type for settings.SITE_ID: %s" % type(settings.SITE_ID).__name__
+                f"Invalid type for settings.SITE_ID: {type(settings.SITE_ID).__name__}"
             )
 
         self.cache_alias = get_cache_multisite_alias()
@@ -78,7 +77,8 @@ class DynamicSiteMiddleware:
                 settings.SITE_ID.set(alias.site_id)
                 SITE_CACHE[settings.SITE_ID] = alias.site  # Pre-populate SITE_CACHE
                 response = self.redirect_to_canonical(request, alias)
-                # debug_check_status_code(response, netloc=netloc, alias=alias, site=alias.site)
+                # debug_check_status_code(response, netloc=netloc,
+                # alias=alias, site=alias.site)
         return response or self.get_response(request)
 
     @staticmethod
@@ -179,7 +179,8 @@ class DynamicSiteMiddleware:
                     alias = Alias.canonical.get(site=site_id)
                 except ObjectDoesNotExist as e:
                     raise MultisiteAliasDoesNotExist(
-                        f"Invalid default SITE_ID. See {settings}. Got `{e}` for SITE_ID=`{site_id}`."
+                        f"Invalid default SITE_ID. See {settings}. "
+                        f"Got `{e}` for SITE_ID=`{site_id}`."
                     )
         return alias
 

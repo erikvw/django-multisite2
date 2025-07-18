@@ -19,7 +19,6 @@ from .request_factory import RequestFactory
     MULTISITE_EXTRA_HOSTS=[".extrahost.com"],
 )
 class TestCookieDomainMiddleware(TestCase):
-
     def setUp(self):
         self.factory = RequestFactory(host="example.com")
         Site.objects.all().delete()
@@ -37,7 +36,8 @@ class TestCookieDomainMiddleware(TestCase):
         )
 
     @override_settings(
-        MULTISITE_COOKIE_DOMAIN_DEPTH=1, MULTISITE_PUBLIC_SUFFIX_LIST_CACHE_DIR="/var/psl"
+        MULTISITE_COOKIE_DOMAIN_DEPTH=1,
+        MULTISITE_PUBLIC_SUFFIX_LIST_CACHE_DIR="/var/psl",
     )
     def test_init2(self):
         middleware = CookieDomainMiddleware(HttpResponse)
@@ -53,7 +53,8 @@ class TestCookieDomainMiddleware(TestCase):
         )
 
     @override_settings(
-        MULTISITE_COOKIE_DOMAIN_DEPTH="invalid", MULTISITE_PUBLIC_SUFFIX_LIST_CACHE_DIR=None
+        MULTISITE_COOKIE_DOMAIN_DEPTH="invalid",
+        MULTISITE_PUBLIC_SUFFIX_LIST_CACHE_DIR=None,
     )
     def test_init4(self):
         self.assertRaises(
@@ -76,7 +77,8 @@ class TestCookieDomainMiddleware(TestCase):
         )
         response = CookieDomainMiddleware(http_response)(request)
         self.assertCountEqual(
-            list(response.cookies.values()), [response.cookies["a"], response.cookies["b"]]
+            list(response.cookies.values()),
+            [response.cookies["a"], response.cookies["b"]],
         )
         self.assertEqual(response.cookies["a"]["domain"], ".example.org")
         self.assertEqual(response.cookies["b"]["domain"], ".example.co.uk")

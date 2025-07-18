@@ -21,12 +21,13 @@ class SiteID(local):
 
     def __init__(self, default: int | None = None, *args, **kwargs):
         """
-        ``default``, if specified, determines the default SITE_ID,
+        ``default``, if specified, determines the default `SITE_ID`
         if that is unset.
         """
         if default is not None and not isinstance(default, int):
             raise MultisiteError(
-                f"Invalid default value for SITE_ID. See settings.SITE_ID. Got `{default}`."
+                "Invalid default value for SITE_ID. See settings.SITE_ID. "
+                f"Got `{default}`."
             )
         self.default = default
         self.reset()
@@ -104,21 +105,23 @@ class SiteID(local):
     def get_default(self):
         """Returns the default SITE_ID."""
         if self.default is None:
-            raise MultisiteError("SITE_ID default has not been set. See settings.SITE_ID.")
+            raise MultisiteError(
+                "SITE_ID default has not been set. See settings.SITE_ID."
+            )
         return self.default
 
 
 class SiteDomain(SiteID):
     def __init__(self, default, *args, **kwargs):
-        """
-        ``default`` is the default domain name, resolved to SITE_ID, if
-        that is unset.
+        """``default`` is the default domain name, resolved to SITE_ID
+        if that is unset.
         """
         # make sure they passed us a string; doing this is the single
         # hardest py2/py3 compat headache.
         # http://python-future.org/compatible_idioms.html#basestring and
-        # https://github.com/PythonCharmers/python-future/blob/master/src/past/types/basestring.py
-        # are not super informative, so just fall back on a literal version check:
+        # https://github.com/PythonCharmers/python-future/blob/
+        #   master/src/past/types/basestring.py
+        # are not super informative, so just falls back on a literal version check:
         if not isinstance(default, str):
             raise TypeError("%r is not a valid default domain." % default)
         self.default_domain = default
@@ -126,7 +129,9 @@ class SiteDomain(SiteID):
         self.reset()
 
     def get_default(self):
-        """Returns the default SITE_ID that matches the default domain name."""
+        """Returns the default SITE_ID that matches the default
+        domain name.
+        """
         from django.contrib.sites.models import Site
 
         if "django.contrib.sites" not in settings.INSTALLED_APPS:

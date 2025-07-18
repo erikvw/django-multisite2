@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404, HttpResponse
-from django.test import TestCase, override_settings, tag
+from django.test import TestCase, override_settings
 
 from multisite import SiteID
 from multisite.exceptions import MultisiteCacheError, MultisiteError
@@ -23,7 +23,9 @@ from .request_factory import RequestFactory
         "multisite": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
     },
     MULTISITE_FALLBACK=None,
-    ALLOWED_HOSTS=get_test_allowed_hosts("example.com", "anothersite.example", replace=True),
+    ALLOWED_HOSTS=get_test_allowed_hosts(
+        "example.com", "anothersite.example", replace=True
+    ),
 )
 class DynamicSiteMiddlewareTest(TestCase):
     def setUp(self):
@@ -111,7 +113,9 @@ class DynamicSiteMiddlewareTest(TestCase):
     def test_debug_no_sites_raises(self):
         Site.objects.all().delete()
         request = self.factory.get("/")
-        self.assertRaises(MultisiteCacheError, DynamicSiteMiddleware(HttpResponse), request)
+        self.assertRaises(
+            MultisiteCacheError, DynamicSiteMiddleware(HttpResponse), request
+        )
 
     @override_settings(MULTISITE_DEBUG=False)
     def test_no_sites_raises(self):
@@ -141,7 +145,6 @@ class DynamicSiteMiddlewareTest(TestCase):
         self.assertEqual(DynamicSiteMiddleware(http_response)(request).status_code, 200)
         self.assertEqual(settings.SITE_ID, self.site.pk)
 
-    @tag("9")
     def test_integration(self):
         """Test that the middleware loads and runs properly
         under settings.MIDDLEWARE.
@@ -198,7 +201,9 @@ class DynamicSiteMiddlewareFallbackTest(TestCase):
         http_response = get_test_http_response()
         response = DynamicSiteMiddleware(http_response)(request)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response["Location"], settings.MULTISITE_FALLBACK_KWARGS["url"])
+        self.assertEqual(
+            response["Location"], settings.MULTISITE_FALLBACK_KWARGS["url"]
+        )
 
     def test_class_view(self):
         from django.views.generic.base import RedirectView
@@ -216,12 +221,13 @@ class DynamicSiteMiddlewareFallbackTest(TestCase):
         settings.MULTISITE_FALLBACK = ""
         http_response = get_test_http_response()
         request = self.factory.get("/")
-        self.assertRaises(ImproperlyConfigured, DynamicSiteMiddleware(http_response), request)
+        self.assertRaises(
+            ImproperlyConfigured, DynamicSiteMiddleware(http_response), request
+        )
 
 
 @override_settings(SITE_ID=0)
 class DynamicSiteMiddlewareSettingsTest(TestCase):
-
     def test_invalid_settings(self):
         http_response = get_test_http_response()
         self.assertRaises(MultisiteError, DynamicSiteMiddleware, http_response)
