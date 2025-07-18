@@ -21,7 +21,7 @@ name = "django-multisite2"
 dynamic = ["version"]
 description = "Serve multiple sites from a single Django application"
 readme = {file = "README.rst", content-type = "text/x-rst"}
-keywords = ["django", "clinicedc", "edc", "clinical trials", "research", "data management", "esource", "encryption", "security"]
+keywords = ["django", "nginx", "edc", "clinical trials", "research", "data management", "gunicorn", "deployment"]
 authors = [
     { name = "Leonid S Shestera", email = "leonid@shestera.ru" },
 ]
