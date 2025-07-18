@@ -5,7 +5,6 @@ import multisite.models.managers
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("multisite", "0003_alter_alias_options_alter_alias_unique_together_and_more"),
     ]

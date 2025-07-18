@@ -67,14 +67,20 @@ class MultisiteModelAdmin(admin.ModelAdmin):
 
         return qs
 
-    def add_view(self, request: WSGIRequest, form_url: str = "", extra_context: dict = None):
+    def add_view(
+        self, request: WSGIRequest, form_url: str = "", extra_context: dict = None
+    ):
         if self.filter_sites_by_current_object:
             if hasattr(self.model, "site") or hasattr(self.model, "sites"):
                 self.object_sites = tuple()
         return super().add_view(request, form_url, extra_context)
 
     def change_view(
-        self, request: WSGIRequest, object_id, form_url: str = "", extra_context: dict = None
+        self,
+        request: WSGIRequest,
+        object_id,
+        form_url: str = "",
+        extra_context: dict = None,
     ):
         if self.filter_sites_by_current_object:
             object_instance = self.get_object(request, object_id)
@@ -129,9 +135,13 @@ class MultisiteModelAdmin(admin.ModelAdmin):
         except AttributeError:
             remote_model = db_field.related_model
         if hasattr(remote_model, "site"):
-            kwargs["queryset"] = remote_model._default_manager.filter(site__in=user_sites)
+            kwargs["queryset"] = remote_model._default_manager.filter(
+                site__in=user_sites
+            )
         if hasattr(remote_model, "sites"):
-            kwargs["queryset"] = remote_model._default_manager.filter(sites__in=user_sites)
+            kwargs["queryset"] = remote_model._default_manager.filter(
+                sites__in=user_sites
+            )
         if db_field.name == "site" or db_field.name == "sites":
             kwargs["queryset"] = user_sites
         if (
@@ -139,7 +149,9 @@ class MultisiteModelAdmin(admin.ModelAdmin):
             and db_field.name in self.multisite_indirect_foreign_key_path.keys()
         ):
             fkey = self.multisite_indirect_foreign_key_path[db_field.name]
-            kwargs["queryset"] = remote_model._default_manager.filter(**{fkey: user_sites})
+            kwargs["queryset"] = remote_model._default_manager.filter(
+                **{fkey: user_sites}
+            )
 
         return kwargs
 

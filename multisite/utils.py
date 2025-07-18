@@ -74,7 +74,9 @@ def sync_canonical_from_site_domain(apps=None, **options):
             alias.save()
 
 
-def create_or_sync_missing_canonical_from_site_domain(apps: AppConfig | None = None) -> None:
+def create_or_sync_missing_canonical_from_site_domain(
+    apps: AppConfig | None = None,
+) -> None:
     """Create missing canonical Alias objects based on Site.domain.
 
     Renamed canonical manager method ``sync_missing``.

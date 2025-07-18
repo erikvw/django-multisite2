@@ -1,6 +1,6 @@
 from django.contrib.sites.models import Site
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
-from django.test import TestCase, tag
+from django.test import TestCase
 
 from multisite.exceptions import MultisiteInvalidHostError
 from multisite.models import Alias
@@ -161,7 +161,10 @@ class AliasTest(TestCase):
         self.assertEqual(Alias.objects.get(site=site).domain, site.domain)
         # Duplicate force_insert
         self.assertRaises(
-            ValidationError, create_or_sync_alias_from_site, site=site, force_insert=True
+            ValidationError,
+            create_or_sync_alias_from_site,
+            site=site,
+            force_insert=True,
         )
         # Update Alias
         site.domain = "example.org"

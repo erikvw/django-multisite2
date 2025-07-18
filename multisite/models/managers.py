@@ -153,7 +153,8 @@ class SpanningCurrentSiteManager(managers.CurrentSiteManager):
                     break
             else:
                 raise ValueError(
-                    f"{self.__class__.__name__} couldn't find a field named either 'site' or 'sites' "
+                    f"{self.__class__.__name__} "
+                    "couldn't find a field named either 'site' or 'sites' "
                     f"in {self.model._meta.object_name}."
                 )
 
@@ -179,10 +180,13 @@ class SpanningCurrentSiteManager(managers.CurrentSiteManager):
         try:
             field = model._meta.get_field(field_name)
             if not isinstance(field, (models.ForeignKey, models.ManyToManyField)):
-                raise TypeError(f"Field {field_name} must be a ForeignKey or ManyToManyField.")
+                raise TypeError(
+                    f"Field {field_name} must be a ForeignKey or ManyToManyField."
+                )
         except FieldDoesNotExist:
             raise ValueError(
-                f"Couldn't find a field named {field_name} in {model._meta.object_name}."
+                f"Couldn't find a field named {field_name} "
+                f"in {model._meta.object_name}."
             )
 
     @staticmethod
