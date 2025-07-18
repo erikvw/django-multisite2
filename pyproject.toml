@@ -16,9 +16,6 @@ exclude = [
 ]
 namespaces = false  # true by default
 
-[tool.setuptools.commands]
-test = "pytest"
-
 [project]
 name = "django-multisite2"
 dynamic = ["version"]
