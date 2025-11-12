@@ -1,4 +1,4 @@
-|pypi| |actions| |codecov| |downloads| |maintainability| |uv| |ruff|
+|pypi| |actions| |codecov| |downloads| |uv| |ruff|
 
 
 
@@ -237,10 +237,6 @@ or
 
 .. |downloads| image:: https://pepy.tech/badge/django-multisite2
    :target: https://pepy.tech/project/django-multisite2
-
-.. |maintainability| image:: https://api.codeclimate.com/v1/badges/4992e131641fc6929b1a/maintainability
-   :target: https://codeclimate.com/github/erikvw/django-multisite2/maintainability
-   :alt: Maintainability
 
 .. |uv| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json
   :target: https://github.com/astral-sh/uv
