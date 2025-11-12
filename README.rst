@@ -210,9 +210,17 @@ the usual localhost:8000.
 Tests
 -----
 
-To run the tests::
+To run the tests:
 
-    python runtests.py
+.. code-block:: bash
+
+    uv run runtests.py
+
+or
+
+.. code-block:: bash
+
+    uv run tox
 
 .. _django-multisite: https://github.com/ecometrica/django-multisite
 .. _cross-domain cookies: http://en.wikipedia.org/wiki/HTTP_cookie#Domain_and_Path
