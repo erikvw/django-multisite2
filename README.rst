@@ -1,4 +1,4 @@
-|pypi| |actions| |codecov| |downloads| |maintainability| |black|
+|pypi| |actions| |codecov| |downloads| |maintainability| |uv| |ruff|
 
 
 
@@ -29,6 +29,8 @@ Python 3.11+ Django 4.2+. New releases are cut from the ``main`` branch.
 
 Older versions of Django are supported by the original `django-multisite`_ project.
 
+Important:
+    Starting with version 3.0.0, the module will be renamed from ``multisite`` to ``django_multisite2``. To use version 3.0.0+, update your settings INSTALLED_APPS, MIDDLEWARE, CACHES and update any import paths.
 
 Installation
 ============
@@ -44,7 +46,7 @@ Replace your ``SITE_ID`` in ``settings.py`` to:
 
 .. code-block::
 
-    from multisite import SiteID
+    from django_multisite2 import SiteID
     SITE_ID = SiteID(default=1)
 
 
@@ -55,7 +57,7 @@ add to INSTALLED_APPS:
     INSTALLED_APPS = [
         ...
         'django.contrib.sites',
-        'multisite',
+        'django_multisite2',
         ...
     ]
 
@@ -66,7 +68,7 @@ Edit settings.py MIDDLEWARE:
 
     MIDDLEWARE = (
         ...
-        'multisite.middleware.DynamicSiteMiddleware',
+        'django_multisite2.middleware.DynamicSiteMiddleware',
         ...
     )
 
@@ -76,23 +78,23 @@ Using a custom cache
 Append to settings.py, in order to use a custom cache that can be
 safely cleared::
 
-    # The cache connection to use for django-multisite.
+    # The cache connection to use for django-multisite2.
     # Default: 'default'
-    CACHE_MULTISITE_ALIAS = 'multisite'
+    CACHE_MULTISITE_ALIAS = 'django_multisite2'
 
-    # The cache key prefix that django-multisite should use.
+    # The cache key prefix that django-multisite2 should use.
     # If not set, defaults to the KEY_PREFIX used in the defined
     # CACHE_MULTISITE_ALIAS or the default cache (empty string if not set)
     CACHE_MULTISITE_KEY_PREFIX = ''
 
 If you have set CACHE\_MULTISITE\_ALIAS to a custom value, *e.g.*
-``'multisite'``, add a separate backend to settings.py CACHES::
+``'django_multisite2'``, add a separate backend to settings.py CACHES::
 
     CACHES = {
         'default': {
             ...
         },
-        'multisite': {
+        'django_multisite2': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
             'TIMEOUT': 60 * 60 * 24,  # 24 hours
             ...
@@ -103,11 +105,11 @@ If you have set CACHE\_MULTISITE\_ALIAS to a custom value, *e.g.*
 Domain fallbacks
 ----------------
 
-By default, if the domain name is unknown, multisite will respond with
+By default, if the domain name is unknown, django_multisite2 will respond with
 an HTTP 404 Not Found error. To change this behaviour, add to
 settings.py::
 
-    # The view function or class-based view that django-multisite will
+    # The view function or class-based view that django-multisite2 will
     # use when it cannot match the hostname with a Site. This can be
     # the name of the function or the function itself.
     # Default: None
@@ -145,7 +147,7 @@ In order to support `cross-domain cookies`_ , for purposes like single-sign-on, 
 settings.py MIDDLEWARE (MIDDLEWARE_CLASSES for Django < 1.10)::
 
     MIDDLEWARE = (
-        'multisite.middleware.CookieDomainMiddleware',
+        'django_multisite2.middleware.CookieDomainMiddleware',
         ...
     )
 
@@ -174,17 +176,17 @@ run::
 Post-migrate signal: post_migrate_sync_alias
 --------------------------------------------
 The ``post-migrate`` signal ``post_migrate_sync_alias`` is registered in the ``apps.py``. ``post_migrate_sync_alias``
-ensures the ``domain`` in multisite's ``Alias`` model is updated to match that of django's ``Site`` model. This signal must
+ensures the ``domain`` in django_multisite2's ``Alias`` model is updated to match that of django's ``Site`` model. This signal must
 run AFTER any ``post-migrate`` signals that manipulate Django's ``Site`` model. If you have an app that manipulates Django's
-``Site`` model, place it before ``multisite`` in `settings. INSTALLED_APPS`. If this is not possible, you may configure ``multisite``
+``Site`` model, place it before ``django_multisite2`` in `settings. INSTALLED_APPS`. If this is not possible, you may configure ``django_multisite2``
 to not connect the ``post-migrate`` signal in ``apps.py`` so that you can do it somewhere else in your code.
 
-To configure `multisite` to not connect the `post-post_migrate_sync_alias` in the `apps.py`, update your settings::
+To configure `django_multisite2` to not connect the `post-post_migrate_sync_alias` in the `apps.py`, update your settings::
 
     MULTISITE_REGISTER_POST_MIGRATE_SYNC_ALIAS = False
 
 With the `settings` attribute set to `False`, it is your responsibility to connect the signal in your code. Note that if you do not sync the `Alias` and `Site`
-models after the `Site` model has changed, multisite may not recognize the domain and switch to the fallback view or
+models after the `Site` model has changed, django_multisite2 may not recognize the domain and switch to the fallback view or
 raise a `Http404` error.
 
 Development Environments
@@ -196,7 +198,7 @@ Development mode is either:
     - Running tests, i.e. manage.py test
     - Running locally in settings.DEBUG = True, where the hostname is a top-level name, i.e. localhost
 
-In order to have multisite use aliases in local environments, add entries to
+In order to have django_multisite2 use aliases in local environments, add entries to
 your local etc/hosts file to match aliases in your applications.  E.g. ::
 
     127.0.0.1 example.com
@@ -232,7 +234,9 @@ To run the tests::
    :target: https://codeclimate.com/github/erikvw/django-multisite2/maintainability
    :alt: Maintainability
 
-.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-   :target: https://github.com/ambv/black
-   :alt: Code Style
+.. |uv| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json
+  :target: https://github.com/astral-sh/uv
 
+.. |ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Ruff

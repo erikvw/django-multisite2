@@ -2,6 +2,13 @@
 Release Notes
 =============
 
+unreleased
+----------
+- move module to src folder and rename module to
+  django_multisite2
+- change builder to uv
+- change linter to ruff
+
 2.0.1
 -----
 - change from ValueError to multisite specific exceptions
