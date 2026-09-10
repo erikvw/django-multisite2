@@ -1,18 +1,20 @@
-|pypi| |actions| |codecov| |downloads| |maintainability| |black|
+|pypi| |actions| |codecov| |downloads| |uv| |ruff|
 
 
 
-django_multisite2
+django-multisite2
 =================
 
-With ``django_multisite2`` a single instance of a Django project can serve multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
+With `django-multisite2`_ a single instance of a Django project can serve multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
 
-In ``settings``, the static ``SITE_ID`` is replaced with ``django_multisite2`` dynamic ``SiteID``::
+``django-multisite2`` provides the module ``multisite``.
+
+In ``settings``, the static ``SITE_ID`` is replaced with ``multisite`` dynamic ``SiteID``::
 
     # settings.py
     SITE_ID = SiteID(default=1)
 
-the dynamic ``SiteID`` behaves like an integer. When combined with ``django_multisite2`` middleware, ``SiteID`` will return the current ``SITE_ID`` based on the url. For example, each url below is an alias of the same server instance. With ``django_multisite2`` you might have something like this::
+the dynamic ``SiteID`` behaves like an integer. When combined with ``multisite`` middleware, ``SiteID`` will return the current ``SITE_ID`` based on the url. For example, each url below is an alias of the same server instance. With ``multisite`` you might have something like this::
 
     # https://harare.example.com
     >>> from django.conf import settings
@@ -70,17 +72,96 @@ Edit settings.py MIDDLEWARE:
         ...
     )
 
+On Django 6.0 and earlier, you have to silence the system check ``sites.E101``:
+
+.. code-block::
+
+    SILENCED_SYSTEM_CHECKS = ["sites.E101"]
+
+
+The Alias model
+---------------
+``Alias`` is the lookup table that maps a hostname to a ``Site``.
+
+On each request ``DynamicSiteMiddleware`` takes the hostname from the ``Host`` header,
+looks it up in ``Alias``, and sets ``SITE_ID`` to the matching ``Alias.site_id``. Django's
+``Site.domain`` is not consulted for that lookup, so a ``Site`` is only reachable once it
+has an ``Alias``.
+
+Canonical aliases are created for you
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Every ``Site`` that has a domain gets exactly one **canonical** ``Alias``, whose ``domain``
+mirrors ``Site.domain``. You do not create these by hand. Multisite keeps them in step
+through three hooks:
+
+* a ``post_save`` signal on ``Site`` creates the canonical ``Alias`` for a new site
+* a ``pre_save`` signal on ``Site`` updates it when ``Site.domain`` changes
+* the ``post_migrate`` signal ``post_migrate_sync_alias`` reconciles every ``Site``, which
+  catches sites created before multisite was installed, or created in ways that bypass
+  signals such as ``loaddata``, ``bulk_create`` or raw SQL
+
+In the normal case, creating a ``Site`` is all you need::
+
+    >>> site = Site.objects.create(domain="example.com", name="Example")
+    >>> site.aliases.get(is_canonical=1)
+    <Alias: example.com -> example.com>
+
+    >>> site.domain = "example.org"
+    >>> site.save()
+    >>> site.aliases.get(is_canonical=1)
+    <Alias: example.org -> example.org>
+
+Extra hostnames are what you add yourself
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Any further ``Alias`` rows for the same ``Site`` are **non-canonical**: additional
+hostnames that resolve to the same site. These are the ones you create::
+
+    Alias.objects.create(site=site, domain="www.example.org")
+    Alias.objects.create(site=site, domain="*.example.org")
+
+A non-canonical alias defaults to ``redirect_to_canonical=True``, so requests arriving on
+it are redirected to the site's canonical domain. Set it to ``False`` to serve the site on
+that hostname without redirecting.
+
+``Alias.domain`` accepts wildcards. A hostname is matched from most to least specific, so
+``shop.example.org`` tries ``shop.example.org``, then ``*.example.org``, then ``*.org``,
+then ``*``, each with and without the request's port. An ``Alias`` with ``domain='*'``
+therefore catches everything.
+
+Populating aliases yourself
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Sites created in a data migration use historical models, which do not fire the signals
+above. Two helpers reconcile things, and both are idempotent::
+
+    from multisite.utils import (
+        create_or_sync_alias_from_site,
+        create_or_sync_canonical_from_all_sites,
+    )
+
+    create_or_sync_alias_from_site(site=site)      # one site
+    create_or_sync_canonical_from_all_sites()      # every site
+
+Both accept an ``apps`` argument so they can be called from a data migration against
+historical models::
+
+    def forwards(apps, schema_editor):
+        create_or_sync_canonical_from_all_sites(apps=apps)
+
+If a ``Site`` has a blank domain, its canonical ``Alias`` is removed instead, since there
+is no hostname to resolve.
+
+
 
 Using a custom cache
 --------------------
 Append to settings.py, in order to use a custom cache that can be
 safely cleared::
 
-    # The cache connection to use for django-multisite.
+    # The cache connection to use for multisite.
     # Default: 'default'
     CACHE_MULTISITE_ALIAS = 'multisite'
 
-    # The cache key prefix that django-multisite should use.
+    # The cache key prefix that multisite should use.
     # If not set, defaults to the KEY_PREFIX used in the defined
     # CACHE_MULTISITE_ALIAS or the default cache (empty string if not set)
     CACHE_MULTISITE_KEY_PREFIX = ''
@@ -107,7 +188,7 @@ By default, if the domain name is unknown, multisite will respond with
 an HTTP 404 Not Found error. To change this behaviour, add to
 settings.py::
 
-    # The view function or class-based view that django-multisite will
+    # The view function or class-based view that multisite will
     # use when it cannot match the hostname with a Site. This can be
     # the name of the function or the function itself.
     # Default: None
@@ -187,6 +268,61 @@ With the `settings` attribute set to `False`, it is your responsibility to conne
 models after the `Site` model has changed, multisite may not recognize the domain and switch to the fallback view or
 raise a `Http404` error.
 
+
+Per-site time zones
+-------------------
+``DynamicSiteTimezoneMiddleware`` activates the current site's time zone for the request
+thread, so Django renders every datetime in local time for whichever site served the
+request. It is the time zone equivalent of what ``SiteID`` does for ``SITE_ID``.
+
+Map each site to a time zone in settings.py. Values may be an IANA key or a ``ZoneInfo``::
+
+    MULTISITE_TIME_ZONES = {
+        1: "Africa/Dar_es_Salaam",
+        2: "America/New_York",
+    }
+
+Then add the middleware, which must come AFTER ``DynamicSiteMiddleware``, since that is
+what resolves ``SITE_ID`` for the request:
+
+.. code-block::
+
+    MIDDLEWARE = (
+        ...
+        'multisite.middleware.DynamicSiteMiddleware',
+        'multisite.middleware.DynamicSiteTimezoneMiddleware',
+        ...
+    )
+
+Nothing else needs to change. ``django.utils.timezone.localtime()``, template rendering,
+form widgets and the admin all follow the activated time zone.
+
+The lookup itself is available directly::
+
+    from multisite.utils import get_multisite_timezone
+
+``get_multisite_timezone()`` returns the IANA key of the time zone for the current
+``SITE_ID``, always as a ``str``. It falls back to ``settings.TIME_ZONE`` and issues a
+``RuntimeWarning`` if ``MULTISITE_TIME_ZONES`` is unset or has no entry for the current
+site, and returns ``settings.TIME_ZONE`` without warning when ``SITE_ID`` is a plain
+integer rather than a ``SiteID``.
+
+Outside a request, in management commands, signal handlers or queue workers, no time zone
+is activated and Django falls back to ``settings.TIME_ZONE``. Wrap the entry point as you
+would with ``SiteID.override()``::
+
+    from django.utils import timezone
+
+    with timezone.override(get_multisite_timezone()):
+        ...
+
+Three system checks cover the configuration:
+
+* ``multisite.E001`` if ``DynamicSiteTimezoneMiddleware`` is listed before ``DynamicSiteMiddleware``
+* ``multisite.W001`` if ``DynamicSiteMiddleware`` is missing altogether
+* ``multisite.W002`` (deploy only) if ``MULTISITE_TIME_ZONES`` is set but the middleware is not installed
+
+
 Development Environments
 ------------------------
 Multisite returns a valid Alias when in "development mode" (defaulting to the
@@ -208,9 +344,17 @@ the usual localhost:8000.
 Tests
 -----
 
-To run the tests::
+To run the tests:
 
-    python runtests.py
+.. code-block:: bash
+
+    uv run runtests.py
+
+or
+
+.. code-block:: bash
+
+    uv run tox
 
 .. _django-multisite: https://github.com/ecometrica/django-multisite
 .. _cross-domain cookies: http://en.wikipedia.org/wiki/HTTP_cookie#Domain_and_Path
@@ -228,11 +372,9 @@ To run the tests::
 .. |downloads| image:: https://pepy.tech/badge/django-multisite2
    :target: https://pepy.tech/project/django-multisite2
 
-.. |maintainability| image:: https://api.codeclimate.com/v1/badges/4992e131641fc6929b1a/maintainability
-   :target: https://codeclimate.com/github/erikvw/django-multisite2/maintainability
-   :alt: Maintainability
+.. |uv| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json
+  :target: https://github.com/astral-sh/uv
 
-.. |black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
-   :target: https://github.com/ambv/black
-   :alt: Code Style
-
+.. |ruff| image:: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
+    :target: https://github.com/astral-sh/ruff
+    :alt: Ruff
