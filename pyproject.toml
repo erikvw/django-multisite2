@@ -89,6 +89,11 @@ lint = [
 dev = [
     "coverage>=7.10.3",
     "django>=5.2",
+    # database drivers, so CI can run the suite against mysql and postgres.
+    # `uv run` re-syncs the tox env from these groups, so tox `deps` alone
+    # would be clobbered.
+    "mysqlclient>=2.2",
+    "psycopg[binary]>=3.2",
     "edc-test-settings>=1.1.2",
     "mock>=5.2.0",
     "pluggy>=1.6.0",

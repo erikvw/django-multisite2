@@ -64,6 +64,7 @@ jobs:
           uv run --active --no-sources tox
         env:
           DJANGO: ${{ matrix.django-version }}
+          DATABASE_ENGINE: ${{ matrix.database-engine }}
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
