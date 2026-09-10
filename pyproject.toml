@@ -69,7 +69,7 @@ exclude_lines = [
 
 [tool.rstcheck]
 ignore_directives = ["toctree", "code-block"]
-# rstcheck does not resolve , so it cannot see the
+# rstcheck does not resolve `.. include::` directives, so it cannot see the
 # substitutions docs/index.rst pulls in from README.rst. sphinx-build does.
 ignore_substitutions = ["pypi"]
 
