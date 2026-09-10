@@ -1,6 +1,6 @@
 [project]
 name = "django-multisite2"
-version = "2.1.0"
+version = "3.0.0"
 description = "Serve multiple sites from a single Django application"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 keywords = ["django", "nginx", "edc", "clinical trials", "research", "data management", "gunicorn", "deployment"]
