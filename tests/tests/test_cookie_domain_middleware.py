@@ -4,8 +4,8 @@ from django.contrib.sites.models import Site
 from django.http import HttpResponse, SimpleCookie
 from django.test import TestCase, override_settings
 
-from django_multisite2.exceptions import MultisiteCookieDomainDepthError
-from django_multisite2.middleware import CookieDomainMiddleware
+from multisite.exceptions import MultisiteCookieDomainDepthError
+from multisite.middleware import CookieDomainMiddleware
 
 from ..get_test_allowed_hosts import get_test_allowed_hosts
 from ..get_test_http_response import get_test_http_response

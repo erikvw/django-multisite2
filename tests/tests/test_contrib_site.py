@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.test import TestCase, override_settings
 
-from django_multisite2 import SiteID
+from multisite import SiteID
 
 
 @override_settings(

@@ -4,10 +4,10 @@ from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404, HttpResponse
 from django.test import TestCase, override_settings
 
-from django_multisite2 import SiteID
-from django_multisite2.exceptions import MultisiteCacheError, MultisiteError
-from django_multisite2.middleware import DynamicSiteMiddleware
-from django_multisite2.models import Alias
+from multisite import SiteID
+from multisite.exceptions import MultisiteCacheError, MultisiteError
+from multisite.middleware import DynamicSiteMiddleware
+from multisite.models import Alias
 
 from ..get_test_allowed_hosts import get_test_allowed_hosts
 from ..get_test_http_response import get_test_http_response
@@ -17,10 +17,10 @@ from .request_factory import RequestFactory
 @override_settings(
     ROOT_URLCONF="multisite_app.urls",
     SITE_ID=SiteID(default=0),
-    CACHE_MULTISITE_ALIAS="django_multisite2",
+    CACHE_MULTISITE_ALIAS="multisite",
     CACHES={
         "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-        "django_multisite2": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+        "multisite": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
     },
     MULTISITE_FALLBACK=None,
     ALLOWED_HOSTS=get_test_allowed_hosts("example.com", "anothersite.example", replace=True),
@@ -161,8 +161,8 @@ class DynamicSiteMiddlewareTest(TestCase):
 
 @override_settings(
     SITE_ID=SiteID(default=0),
-    CACHE_MULTISITE_ALIAS="django_multisite2",
-    CACHES={"django_multisite2": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHE_MULTISITE_ALIAS="multisite",
+    CACHES={"multisite": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
     MULTISITE_FALLBACK=None,
     MULTISITE_FALLBACK_KWARGS={},
 )
@@ -227,8 +227,8 @@ class DynamicSiteMiddlewareSettingsTest(TestCase):
 
 @override_settings(
     SITE_ID=SiteID(default=0),
-    CACHE_MULTISITE_ALIAS="django_multisite2",
-    CACHES={"django_multisite2": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
+    CACHE_MULTISITE_ALIAS="multisite",
+    CACHES={"multisite": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
     MULTISITE_FALLBACK=None,
     ALLOWED_HOSTS=get_test_allowed_hosts("example.com", replace=True),
 )

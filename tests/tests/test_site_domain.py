@@ -2,7 +2,7 @@ from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.test import TestCase
 
-from django_multisite2 import SiteDomain
+from multisite import SiteDomain
 
 
 class TestSiteDomain(TestCase):

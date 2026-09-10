@@ -2,17 +2,19 @@
 
 
 
-django_multisite2
+django-multisite2
 =================
 
-With ``django_multisite2`` a single instance of a Django project can serve multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
+With `django-multisite2`_ a single instance of a Django project can serve multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
 
-In ``settings``, the static ``SITE_ID`` is replaced with ``django_multisite2`` dynamic ``SiteID``::
+``django-multisite2`` provides the module ``multisite``.
+
+In ``settings``, the static ``SITE_ID`` is replaced with ``multisite`` dynamic ``SiteID``::
 
     # settings.py
     SITE_ID = SiteID(default=1)
 
-the dynamic ``SiteID`` behaves like an integer. When combined with ``django_multisite2`` middleware, ``SiteID`` will return the current ``SITE_ID`` based on the url. For example, each url below is an alias of the same server instance. With ``django_multisite2`` you might have something like this::
+the dynamic ``SiteID`` behaves like an integer. When combined with ``multisite`` middleware, ``SiteID`` will return the current ``SITE_ID`` based on the url. For example, each url below is an alias of the same server instance. With ``multisite`` you might have something like this::
 
     # https://harare.example.com
     >>> from django.conf import settings
@@ -29,8 +31,6 @@ Python 3.11+ Django 4.2+. New releases are cut from the ``main`` branch.
 
 Older versions of Django are supported by the original `django-multisite`_ project.
 
-Important:
-    Starting with version 3.0.0, the module will be renamed from ``multisite`` to ``django_multisite2``. To use version 3.0.0+, update your settings INSTALLED_APPS, MIDDLEWARE, CACHES and update any import paths.
 
 Installation
 ============
@@ -46,7 +46,7 @@ Replace your ``SITE_ID`` in ``settings.py`` to:
 
 .. code-block::
 
-    from django_multisite2 import SiteID
+    from multisite import SiteID
     SITE_ID = SiteID(default=1)
 
 
@@ -57,7 +57,7 @@ add to INSTALLED_APPS:
     INSTALLED_APPS = [
         ...
         'django.contrib.sites',
-        'django_multisite2',
+        'multisite',
         ...
     ]
 
@@ -68,9 +68,16 @@ Edit settings.py MIDDLEWARE:
 
     MIDDLEWARE = (
         ...
-        'django_multisite2.middleware.DynamicSiteMiddleware',
+        'multisite.middleware.DynamicSiteMiddleware',
         ...
     )
+
+On Django 6.0 and earlier, you have to silence the system check ``sites.E101``:
+
+.. code-block::
+
+    SILENCED_SYSTEM_CHECKS = ["sites.E101"]
+
 
 
 Using a custom cache
@@ -78,23 +85,23 @@ Using a custom cache
 Append to settings.py, in order to use a custom cache that can be
 safely cleared::
 
-    # The cache connection to use for django-multisite2.
+    # The cache connection to use for multisite.
     # Default: 'default'
-    CACHE_MULTISITE_ALIAS = 'django_multisite2'
+    CACHE_MULTISITE_ALIAS = 'multisite'
 
-    # The cache key prefix that django-multisite2 should use.
+    # The cache key prefix that multisite should use.
     # If not set, defaults to the KEY_PREFIX used in the defined
     # CACHE_MULTISITE_ALIAS or the default cache (empty string if not set)
     CACHE_MULTISITE_KEY_PREFIX = ''
 
 If you have set CACHE\_MULTISITE\_ALIAS to a custom value, *e.g.*
-``'django_multisite2'``, add a separate backend to settings.py CACHES::
+``'multisite'``, add a separate backend to settings.py CACHES::
 
     CACHES = {
         'default': {
             ...
         },
-        'django_multisite2': {
+        'multisite': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
             'TIMEOUT': 60 * 60 * 24,  # 24 hours
             ...
@@ -105,11 +112,11 @@ If you have set CACHE\_MULTISITE\_ALIAS to a custom value, *e.g.*
 Domain fallbacks
 ----------------
 
-By default, if the domain name is unknown, django_multisite2 will respond with
+By default, if the domain name is unknown, multisite will respond with
 an HTTP 404 Not Found error. To change this behaviour, add to
 settings.py::
 
-    # The view function or class-based view that django-multisite2 will
+    # The view function or class-based view that multisite will
     # use when it cannot match the hostname with a Site. This can be
     # the name of the function or the function itself.
     # Default: None
@@ -147,7 +154,7 @@ In order to support `cross-domain cookies`_ , for purposes like single-sign-on, 
 settings.py MIDDLEWARE (MIDDLEWARE_CLASSES for Django < 1.10)::
 
     MIDDLEWARE = (
-        'django_multisite2.middleware.CookieDomainMiddleware',
+        'multisite.middleware.CookieDomainMiddleware',
         ...
     )
 
@@ -176,18 +183,73 @@ run::
 Post-migrate signal: post_migrate_sync_alias
 --------------------------------------------
 The ``post-migrate`` signal ``post_migrate_sync_alias`` is registered in the ``apps.py``. ``post_migrate_sync_alias``
-ensures the ``domain`` in django_multisite2's ``Alias`` model is updated to match that of django's ``Site`` model. This signal must
+ensures the ``domain`` in multisite's ``Alias`` model is updated to match that of django's ``Site`` model. This signal must
 run AFTER any ``post-migrate`` signals that manipulate Django's ``Site`` model. If you have an app that manipulates Django's
-``Site`` model, place it before ``django_multisite2`` in `settings. INSTALLED_APPS`. If this is not possible, you may configure ``django_multisite2``
+``Site`` model, place it before ``multisite`` in `settings. INSTALLED_APPS`. If this is not possible, you may configure ``multisite``
 to not connect the ``post-migrate`` signal in ``apps.py`` so that you can do it somewhere else in your code.
 
-To configure `django_multisite2` to not connect the `post-post_migrate_sync_alias` in the `apps.py`, update your settings::
+To configure `multisite` to not connect the `post-post_migrate_sync_alias` in the `apps.py`, update your settings::
 
     MULTISITE_REGISTER_POST_MIGRATE_SYNC_ALIAS = False
 
 With the `settings` attribute set to `False`, it is your responsibility to connect the signal in your code. Note that if you do not sync the `Alias` and `Site`
-models after the `Site` model has changed, django_multisite2 may not recognize the domain and switch to the fallback view or
+models after the `Site` model has changed, multisite may not recognize the domain and switch to the fallback view or
 raise a `Http404` error.
+
+
+Per-site time zones
+-------------------
+``DynamicSiteTimezoneMiddleware`` activates the current site's time zone for the request
+thread, so Django renders every datetime in local time for whichever site served the
+request. It is the time zone equivalent of what ``SiteID`` does for ``SITE_ID``.
+
+Map each site to a time zone in settings.py. Values may be an IANA key or a ``ZoneInfo``::
+
+    MULTISITE_TIME_ZONES = {
+        1: "Africa/Dar_es_Salaam",
+        2: "America/New_York",
+    }
+
+Then add the middleware, which must come AFTER ``DynamicSiteMiddleware``, since that is
+what resolves ``SITE_ID`` for the request:
+
+.. code-block::
+
+    MIDDLEWARE = (
+        ...
+        'multisite.middleware.DynamicSiteMiddleware',
+        'multisite.middleware.DynamicSiteTimezoneMiddleware',
+        ...
+    )
+
+Nothing else needs to change. ``django.utils.timezone.localtime()``, template rendering,
+form widgets and the admin all follow the activated time zone.
+
+The lookup itself is available directly::
+
+    from multisite.utils import get_multisite_timezone
+
+``get_multisite_timezone()`` returns the IANA key of the time zone for the current
+``SITE_ID``, always as a ``str``. It falls back to ``settings.TIME_ZONE`` and issues a
+``RuntimeWarning`` if ``MULTISITE_TIME_ZONES`` is unset or has no entry for the current
+site, and returns ``settings.TIME_ZONE`` without warning when ``SITE_ID`` is a plain
+integer rather than a ``SiteID``.
+
+Outside a request, in management commands, signal handlers or queue workers, no time zone
+is activated and Django falls back to ``settings.TIME_ZONE``. Wrap the entry point as you
+would with ``SiteID.override()``::
+
+    from django.utils import timezone
+
+    with timezone.override(get_multisite_timezone()):
+        ...
+
+Three system checks cover the configuration:
+
+* ``multisite.E001`` if ``DynamicSiteTimezoneMiddleware`` is listed before ``DynamicSiteMiddleware``
+* ``multisite.W001`` if ``DynamicSiteMiddleware`` is missing altogether
+* ``multisite.W002`` (deploy only) if ``MULTISITE_TIME_ZONES`` is set but the middleware is not installed
+
 
 Development Environments
 ------------------------
@@ -198,7 +260,7 @@ Development mode is either:
     - Running tests, i.e. manage.py test
     - Running locally in settings.DEBUG = True, where the hostname is a top-level name, i.e. localhost
 
-In order to have django_multisite2 use aliases in local environments, add entries to
+In order to have multisite use aliases in local environments, add entries to
 your local etc/hosts file to match aliases in your applications.  E.g. ::
 
     127.0.0.1 example.com

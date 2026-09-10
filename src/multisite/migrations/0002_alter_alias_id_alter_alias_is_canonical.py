@@ -2,12 +2,12 @@
 
 from django.db import migrations, models
 
-import django_multisite2.models
+import multisite.models
 
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("django_multisite2", "0001_initial"),
+        ("multisite", "0001_initial"),
     ]
 
     operations = [
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 default=False,
                 editable=False,
                 help_text="Does this domain name match the one in site?",
-                validators=[django_multisite2.models.validators.validate_true_or_none],
+                validators=[multisite.models.validators.validate_true_or_none],
                 verbose_name="is canonical?",
             ),
         ),

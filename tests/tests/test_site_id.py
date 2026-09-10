@@ -1,8 +1,8 @@
 from django.contrib.sites.models import Site
 from django.test import TestCase
 
-from django_multisite2 import SiteID
-from django_multisite2.exceptions import MultisiteError
+from multisite import SiteID
+from multisite.exceptions import MultisiteError
 
 
 class TestSiteID(TestCase):

@@ -2,8 +2,8 @@ from django.conf import settings
 from django.contrib.sites.models import Site
 from django.test import TestCase, override_settings
 
-from django_multisite2 import SiteID
-from django_multisite2.hacks import use_framework_for_site_cache
+from multisite import SiteID
+from multisite.hacks import use_framework_for_site_cache
 
 
 @override_settings(SITE_ID=SiteID())
@@ -91,9 +91,9 @@ class SiteCacheTest(TestCase):
         )
 
     @override_settings(
-        CACHE_MULTISITE_ALIAS="django_multisite2",
+        CACHE_MULTISITE_ALIAS="multisite",
         CACHES={
-            "django_multisite2": {
+            "multisite": {
                 "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
                 "KEY_PREFIX": "looselycoupled",
             }

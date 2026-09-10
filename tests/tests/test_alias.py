@@ -2,9 +2,9 @@ from django.contrib.sites.models import Site
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.test import TestCase
 
-from django_multisite2.exceptions import MultisiteInvalidHostError
-from django_multisite2.models import Alias
-from django_multisite2.utils import (
+from multisite.exceptions import MultisiteInvalidHostError
+from multisite.models import Alias
+from multisite.utils import (
     create_or_sync_alias_from_site,
     create_or_sync_canonical_from_all_sites,
     create_or_sync_missing_canonical_from_site_domain,
