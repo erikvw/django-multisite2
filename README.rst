@@ -5,7 +5,7 @@
 django-multisite2
 =================
 
-With ``django-multisite2`` a single instance of a Django project can serve multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
+With `django-multisite2`_ a single instance of a Django project can serve multiple sites using a single settings file (multi-tenant). The current ``SITE_ID`` is extracted from the URL.
 
 ``django-multisite2`` provides the module ``multisite``.
 
@@ -28,6 +28,9 @@ the dynamic ``SiteID`` behaves like an integer. When combined with ``multisite``
 
 
 Python 3.11+ Django 4.2+. New releases are cut from the ``main`` branch.
+
+Older versions of Django are supported by the original `django-multisite`_ project.
+
 
 Installation
 ============
