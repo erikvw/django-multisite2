@@ -7,7 +7,7 @@ from django.db.models import UniqueConstraint
 from django.utils.translation import gettext_lazy as _
 
 from .managers import AliasManager, CanonicalAliasManager, NotCanonicalAliasManager
-from .validators import validate_1_or_none
+from .validators import validate_true_or_none
 
 _site_domain = Site._meta.get_field("domain")
 
@@ -33,12 +33,12 @@ class Alias(models.Model):
 
     site = models.ForeignKey(Site, related_name="aliases", on_delete=models.CASCADE)
 
-    is_canonical = models.IntegerField(
+    is_canonical = models.BooleanField(
         _("is canonical?"),
         default=None,
         null=True,
         editable=False,
-        validators=[validate_1_or_none],
+        validators=[validate_true_or_none],
         help_text=_("Does this domain name match the one in site?"),
     )
 

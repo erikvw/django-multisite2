@@ -99,23 +99,23 @@ class AliasManager(models.Manager):
 
 
 class CanonicalAliasManager(models.Manager):
-    """Manager for Alias objects where is_canonical == 1."""
+    """Manager for Alias objects where is_canonical is True."""
 
     use_in_migrations = True
 
     def get_queryset(self) -> QuerySet[Alias]:
         queryset = super().get_queryset()
-        return queryset.filter(is_canonical=1)
+        return queryset.filter(is_canonical=True)
 
 
 class NotCanonicalAliasManager(models.Manager):
-    """Manager for Aliases where is_canonical != 1."""
+    """Manager for Aliases where is_canonical is not True."""
 
     use_in_migrations = True
 
     def get_queryset(self) -> QuerySet[Alias]:
         queryset = super().get_queryset()
-        return queryset.exclude(is_canonical=1)
+        return queryset.exclude(is_canonical=True)
 
 
 class SpanningCurrentSiteManager(managers.CurrentSiteManager):

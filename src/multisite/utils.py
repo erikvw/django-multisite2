@@ -69,7 +69,7 @@ def sync_canonical_from_site_domain(apps=None, **options):
     """
     apps = apps or django_apps
     model_cls = apps.get_model("multisite.alias")
-    options.update(is_canonical=1)
+    options.update(is_canonical=True)
     aliases = model_cls.objects.filter(**options)
     for alias in aliases.select_related("site"):
         domain = alias.site.domain
@@ -87,7 +87,7 @@ def create_or_sync_missing_canonical_from_site_domain(
     """
     apps = apps or django_apps
     model_cls = apps.get_model("multisite.alias")
-    aliases = model_cls.objects.filter(is_canonical=1)
+    aliases = model_cls.objects.filter(is_canonical=True)
     try:
         sites = model_cls._meta.get_field("site").remote_field.model
     except AttributeError:
@@ -126,10 +126,10 @@ def create_or_sync_alias_from_site(
     model_cls = apps.get_model("multisite.alias")
     if domain := site.domain:
         if force_insert:
-            alias = model_cls.objects.create(site=site, is_canonical=1, domain=domain)
+            alias = model_cls.objects.create(site=site, is_canonical=True, domain=domain)
         else:
             alias, created = model_cls.objects.get_or_create(
-                site=site, is_canonical=1, defaults={"domain": domain}
+                site=site, is_canonical=True, defaults={"domain": domain}
             )
             if not created and alias.domain != domain:
                 alias.site = site
