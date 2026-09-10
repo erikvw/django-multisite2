@@ -4,10 +4,17 @@ Release Notes
 
 unreleased
 ----------
-- move module to src folder and rename module to
-  django_multisite2
+- with this release you must run migrations!
+- revert Alias.is_canonical to BooleanField(null=True) and add migration
+- revert is_canonical=1 to is_canonical=1
+- add dynamic timezone middleware and func (optional)
+- update README and sphinx conf
 - change builder to uv
+- move module to src folder
 - change linter to ruff
+
+2.1.0
+-----
 
 2.0.1
 -----
