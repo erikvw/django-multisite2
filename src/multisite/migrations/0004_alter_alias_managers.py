@@ -2,13 +2,13 @@
 
 from django.db import migrations
 
-import django_multisite2.models.managers
+import multisite.models.managers
 
 
 class Migration(migrations.Migration):
     dependencies = [
         (
-            "django_multisite2",
+            "multisite",
             "0003_alter_alias_options_alter_alias_unique_together_and_more",
         ),
     ]
@@ -17,14 +17,14 @@ class Migration(migrations.Migration):
         migrations.AlterModelManagers(
             name="alias",
             managers=[
-                ("objects", django_multisite2.models.managers.AliasManager()),
+                ("objects", multisite.models.managers.AliasManager()),
                 (
                     "canonical",
-                    django_multisite2.models.managers.CanonicalAliasManager(),
+                    multisite.models.managers.CanonicalAliasManager(),
                 ),
                 (
                     "aliases",
-                    django_multisite2.models.managers.NotCanonicalAliasManager(),
+                    multisite.models.managers.NotCanonicalAliasManager(),
                 ),
             ],
         ),

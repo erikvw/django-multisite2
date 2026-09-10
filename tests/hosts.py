@@ -28,7 +28,7 @@ class AllowedHosts(object):
     def __init__(self):
         self.extra_hosts = get_multisite_extra_hosts()
         if self.alias_model is None:
-            from django_multisite2.models import Alias
+            from multisite.models import Alias
 
             self.alias_model = Alias
 

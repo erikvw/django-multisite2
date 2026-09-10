@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 from django.db import migrations, models
 
-import django_multisite2.models
+import multisite.models
 
 
 class Migration(migrations.Migration):
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
                     models.NullBooleanField(
                         default=None,
                         validators=[
-                            django_multisite2.models.validators.validate_true_or_none
+                            multisite.models.validators.validate_true_or_none
                         ],
                         editable=False,
                         help_text="Does this domain name match the one in site?",

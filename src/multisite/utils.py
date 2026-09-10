@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING, Callable
+import warnings
+from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -13,12 +15,14 @@ from django.core.exceptions import (
 from django.http import Http404
 from django.urls import get_callable
 
+from .threadlocals import SiteID
+
 if TYPE_CHECKING:
     from django.apps import AppConfig
     from django.contrib.sites.models import Site
     from django.db.models import QuerySet
 
-    from django_multisite2.models import Alias
+    from .models import Alias
 
 
 def get_cache_multisite_alias() -> str:
@@ -64,7 +68,7 @@ def sync_canonical_from_site_domain(apps=None, **options):
 
     """
     apps = apps or django_apps
-    model_cls = apps.get_model("django_multisite2.alias")
+    model_cls = apps.get_model("multisite.alias")
     options.update(is_canonical=1)
     aliases = model_cls.objects.filter(**options)
     for alias in aliases.select_related("site"):
@@ -82,7 +86,7 @@ def create_or_sync_missing_canonical_from_site_domain(
     Renamed canonical manager method ``sync_missing``.
     """
     apps = apps or django_apps
-    model_cls = apps.get_model("django_multisite2.alias")
+    model_cls = apps.get_model("multisite.alias")
     aliases = model_cls.objects.filter(is_canonical=1)
     try:
         sites = model_cls._meta.get_field("site").remote_field.model
@@ -119,7 +123,7 @@ def create_or_sync_alias_from_site(
     alias = None
     apps = apps or django_apps
     force_insert = False if force_insert is None else force_insert
-    model_cls = apps.get_model("django_multisite2.alias")
+    model_cls = apps.get_model("multisite.alias")
     if domain := site.domain:
         if force_insert:
             alias = model_cls.objects.create(site=site, is_canonical=1, domain=domain)
@@ -142,7 +146,7 @@ def sync_blank_domain(site: Site = None, apps: AppConfig | None = None) -> None:
     :rtype: object
     """
     apps = apps or django_apps
-    model_cls = apps.get_model("django_multisite2.alias")
+    model_cls = apps.get_model("multisite.alias")
 
     if site.domain:
         raise ValueError("%r has a domain" % site)
@@ -162,13 +166,48 @@ def sync_blank_domain(site: Site = None, apps: AppConfig | None = None) -> None:
 
 
 def get_user_sites(request) -> QuerySet[Site]:
+    site_model_cls = django_apps.get_model("sites.site")
     if request.user.is_superuser:
-        sites = Site.objects.all()
+        sites = site_model_cls.objects.all()
     else:
         try:
             user_profile = request.user.userprofile.sites.all()
         except AttributeError:
-            sites = Site.objects.all().order_by("domain")
+            sites = site_model_cls.objects.all().order_by("domain")
         else:
             sites = user_profile.sites.order_by("domain")
     return sites
+
+
+def get_multisite_timezone() -> str:
+    """Returns the IANA key of the time zone for the current site.
+
+    Values in `settings.MULTISITE_TIME_ZONES` may be given as a str
+    or as a `ZoneInfo`. Either way a str is returned, since callers
+    pass the result straight to `ZoneInfo()`.
+    """
+    timezone = settings.TIME_ZONE
+    if isinstance(settings.SITE_ID, SiteID):
+        site_timezones = getattr(settings, "MULTISITE_TIME_ZONES", {})
+        if not site_timezones:
+            warnings.warn(
+                (
+                    "settings.MULTISITE_TIME_ZONES not set for multisite trial. "
+                    f"Defaulting to {settings.TIME_ZONE}"
+                ),
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        elif not site_timezones.get(settings.SITE_ID):
+            warnings.warn(
+                (
+                    "settings.MULTISITE_TIME_ZONES missing timezone for site "
+                    f"{settings.SITE_ID}. Defaulting to {settings.TIME_ZONE}. "
+                    f"Got {settings.MULTISITE_TIME_ZONES}."
+                ),
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        else:
+            timezone = site_timezones.get(settings.SITE_ID)
+    return str(timezone)

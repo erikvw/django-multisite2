@@ -2,7 +2,7 @@
 name = "django-multisite2"
 version = "2.1.0"
 description = "Serve multiple sites from a single Django application"
-readme = {file = "README.rst", content-type = "text/x-rst"}
+readme = { file = "README.rst", content-type = "text/x-rst" }
 keywords = ["django", "nginx", "edc", "clinical trials", "research", "data management", "gunicorn", "deployment"]
 authors = [
     { name = "Leonid S Shestera", email = "leonid@shestera.ru" },
@@ -34,11 +34,12 @@ Changelog = "http://github.com/erikvw/django-multisite2/blob/main/CHANGES"
 
 
 [build-system]
-requires = ["uv_build>=0.9.0"]
+requires = ["uv_build>=0.12.0"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-root = "src"
+module-name = "multisite"
 source-exclude = ["bin"]
 namespace = false
 
@@ -52,10 +53,10 @@ exclude = ["migrations", ".tox", ".venv"]
 [tool.coverage.run]
 parallel = false
 branch = true
-source = ["django_multisite2"]
+source = ["multisite"]
 
 [tool.coverage.paths]
-source = ["django_multisite2"]
+source = ["multisite"]
 
 [tool.coverage.report]
 show_missing = true
