@@ -1,3 +1,0 @@
-[run]
-source=django_multisite2
-omit=django_multisite2/migrations/*

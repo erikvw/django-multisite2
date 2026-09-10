@@ -79,7 +79,8 @@ docs = [
     "sphinx-inline-tabs>=2023.4.21",
 ]
 lint = [
-    "ruff>=0.12.5",
+    # ruff 0.16 widened the default rule set, see PR discussion
+    "ruff>=0.12.5,<0.16",
 ]
 
 dev = [
