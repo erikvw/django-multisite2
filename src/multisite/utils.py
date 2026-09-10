@@ -136,7 +136,7 @@ def create_or_sync_alias_from_site(
                 alias.domain = domain
                 alias.save()
     else:
-        sync_blank_domain(site=site)
+        sync_blank_domain(site=site, apps=apps)
     return alias
 
 

@@ -79,6 +79,78 @@ On Django 6.0 and earlier, you have to silence the system check ``sites.E101``:
     SILENCED_SYSTEM_CHECKS = ["sites.E101"]
 
 
+The Alias model
+---------------
+``Alias`` is the lookup table that maps a hostname to a ``Site``.
+
+On each request ``DynamicSiteMiddleware`` takes the hostname from the ``Host`` header,
+looks it up in ``Alias``, and sets ``SITE_ID`` to the matching ``Alias.site_id``. Django's
+``Site.domain`` is not consulted for that lookup, so a ``Site`` is only reachable once it
+has an ``Alias``.
+
+Canonical aliases are created for you
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Every ``Site`` that has a domain gets exactly one **canonical** ``Alias``, whose ``domain``
+mirrors ``Site.domain``. You do not create these by hand. Multisite keeps them in step
+through three hooks:
+
+* a ``post_save`` signal on ``Site`` creates the canonical ``Alias`` for a new site
+* a ``pre_save`` signal on ``Site`` updates it when ``Site.domain`` changes
+* the ``post_migrate`` signal ``post_migrate_sync_alias`` reconciles every ``Site``, which
+  catches sites created before multisite was installed, or created in ways that bypass
+  signals such as ``loaddata``, ``bulk_create`` or raw SQL
+
+In the normal case, creating a ``Site`` is all you need::
+
+    >>> site = Site.objects.create(domain="example.com", name="Example")
+    >>> site.aliases.get(is_canonical=1)
+    <Alias: example.com -> example.com>
+
+    >>> site.domain = "example.org"
+    >>> site.save()
+    >>> site.aliases.get(is_canonical=1)
+    <Alias: example.org -> example.org>
+
+Extra hostnames are what you add yourself
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Any further ``Alias`` rows for the same ``Site`` are **non-canonical**: additional
+hostnames that resolve to the same site. These are the ones you create::
+
+    Alias.objects.create(site=site, domain="www.example.org")
+    Alias.objects.create(site=site, domain="*.example.org")
+
+A non-canonical alias defaults to ``redirect_to_canonical=True``, so requests arriving on
+it are redirected to the site's canonical domain. Set it to ``False`` to serve the site on
+that hostname without redirecting.
+
+``Alias.domain`` accepts wildcards. A hostname is matched from most to least specific, so
+``shop.example.org`` tries ``shop.example.org``, then ``*.example.org``, then ``*.org``,
+then ``*``, each with and without the request's port. An ``Alias`` with ``domain='*'``
+therefore catches everything.
+
+Populating aliases yourself
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Sites created in a data migration use historical models, which do not fire the signals
+above. Two helpers reconcile things, and both are idempotent::
+
+    from multisite.utils import (
+        create_or_sync_alias_from_site,
+        create_or_sync_canonical_from_all_sites,
+    )
+
+    create_or_sync_alias_from_site(site=site)      # one site
+    create_or_sync_canonical_from_all_sites()      # every site
+
+Both accept an ``apps`` argument so they can be called from a data migration against
+historical models::
+
+    def forwards(apps, schema_editor):
+        create_or_sync_canonical_from_all_sites(apps=apps)
+
+If a ``Site`` has a blank domain, its canonical ``Alias`` is removed instead, since there
+is no hostname to resolve.
+
+
 
 Using a custom cache
 --------------------

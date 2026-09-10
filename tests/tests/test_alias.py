@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock, call
+
 from django.contrib.sites.models import Site
 from django.core.exceptions import MultipleObjectsReturned, ValidationError
 from django.test import TestCase
@@ -188,6 +190,21 @@ class AliasTest(TestCase):
         alias.delete()
         sync_blank_domain(site=site)
         self.assertFalse(Alias.objects.filter(site=site).exists())
+
+    def test_create_or_sync_alias_from_site_forwards_apps_for_blank_domain(self):
+        """The `apps` registry must reach `sync_blank_domain`, which is
+        what makes these helpers usable from a data migration against
+        historical models.
+        """
+        site = Site.objects.create(domain="example.com")
+        site.domain = ""
+        apps = MagicMock()
+        create_or_sync_alias_from_site(site=site, apps=apps)
+        self.assertEqual(
+            apps.get_model.call_args_list,
+            [call("multisite.alias"), call("multisite.alias")],
+            "sync_blank_domain did not use the `apps` registry it was given",
+        )
 
     def test_hooks(self):
         # Create empty Site
