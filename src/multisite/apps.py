@@ -27,7 +27,7 @@ class AppConfig(DjangoAppConfig):
 
     def ready(self):
         register(multisite_middleware_check)
-        register(multisite_timezone_setting_check, deploy=True)
+        register(multisite_timezone_setting_check)
         if not getattr(settings, "MULTISITE_REGISTER_POST_MIGRATE_SYNC_ALIAS", True):
             post_migrate.connect(
                 post_migrate_sync_alias,

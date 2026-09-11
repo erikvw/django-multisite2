@@ -37,6 +37,10 @@ class MultisiteCookieDomainDepthError(Exception):
     pass
 
 
+class MultisiteTimezoneError(Exception):
+    pass
+
+
 def debug_raise_disallowed_host_exception(e):
     if getattr(settings, "MULTISITE_DEBUG", None):
         raise MultisiteDisallowedHost(

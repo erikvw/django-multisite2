@@ -1,0 +1,2 @@
+DYNAMIC_SITE_MIDDLEWARE = "multisite.middleware.DynamicSiteMiddleware"
+DYNAMIC_SITE_TIMEZONE_MIDDLEWARE = "multisite.middleware.DynamicSiteTimezoneMiddleware"

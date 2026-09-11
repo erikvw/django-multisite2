@@ -4,9 +4,18 @@ Release Notes
 
 unreleased
 ----------
+- tighten up config for multi-timezone support by converting
+  config warnings to exceptions.
+- require timezone middleware and settings dictionary if using
+  get_multisite_timezone().
+- raise on unknown site_id in get_multisite_timezone call.
+- add additional tests
+
+3.0.0
+-----
 - with this release you must run migrations!
 - revert Alias.is_canonical to BooleanField(null=True) and add migration
-- revert is_canonical=1 to is_canonical=1
+- revert is_canonical=1 to is_canonical=True
 - add dynamic timezone middleware and func (optional)
 - update README and sphinx conf
 - change builder to uv
