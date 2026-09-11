@@ -3,7 +3,6 @@ from django.contrib.sites.models import Site
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404, HttpResponse
 from django.test import TestCase, override_settings
-
 from multisite import SiteID
 from multisite.exceptions import MultisiteCacheError, MultisiteError
 from multisite.middleware import DynamicSiteMiddleware
