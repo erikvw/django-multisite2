@@ -214,8 +214,8 @@ def get_multisite_timezone(site_id: int | None = None) -> str:
     if site_id is not None and not timezone_data.get(site_id):
         raise MultisiteTimezoneError(
             "settings.MULTISITE_TIME_ZONES missing timezone for site_id. "
-            f"Expected one of {settings.MULTISITE_TIME_ZONES}. Got site_id={site_id}."
+            f"Expected one of {timezone_data}. Got site_id={site_id}."
         )
 
     site_id: str = settings.SITE_ID if site_id is None else site_id
-    return str(timezone_data.get(site_id)) or settings.TIME_ZONE
+    return timezone_data.get(site_id) or settings.TIME_ZONE

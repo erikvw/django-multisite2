@@ -231,9 +231,7 @@ class DynamicSiteTimezoneMiddlewareOrderTest(TestCase):
         """
         view = ViewSpy()
         chain = DynamicSiteTimezoneMiddleware(DynamicSiteMiddleware(view))
-        # with self.assertWarns(RuntimeWarning) as cm:
         chain(RequestFactory(host="anothersite.example").get("/"))
-        # self.assertIn("missing timezone for site 0", str(cm.warning))
         self.assertEqual(view.timezone_name, settings.TIME_ZONE)
 
 
@@ -290,6 +288,22 @@ class MultisiteMiddlewareCheckTest(TestCase):
     @override_settings(MIDDLEWARE=[DYNAMIC_SITE_MIDDLEWARE], MULTISITE_TIME_ZONES={})
     def test_setting_check_silent_when_setting_empty(self):
         self.assertEqual(multisite_timezone_setting_check(None), [])
+
+    @override_settings(MIDDLEWARE=[DYNAMIC_SITE_MIDDLEWARE, DYNAMIC_SITE_TIMEZONE_MIDDLEWARE])
+    def test_setting_check_error_when_middleware_installed_and_setting_missing(self):
+        self.assertFalse(hasattr(settings, "MULTISITE_TIME_ZONES"))
+        messages = multisite_timezone_setting_check(None)
+        self.assertEqual(self.ids(messages), ["multisite.E002"])
+        self.assertIn("MULTISITE_TIME_ZONES is missing or not set", messages[0].msg)
+
+    @override_settings(
+        MIDDLEWARE=[DYNAMIC_SITE_MIDDLEWARE, DYNAMIC_SITE_TIMEZONE_MIDDLEWARE],
+        MULTISITE_TIME_ZONES={},
+    )
+    def test_setting_check_error_when_middleware_installed_and_setting_empty(self):
+        messages = multisite_timezone_setting_check(None)
+        self.assertEqual(self.ids(messages), ["multisite.E002"])
+        self.assertIn("MULTISITE_TIME_ZONES is missing or not set", messages[0].msg)
 
     def test_checks_are_registered(self):
         registered = [c.__name__ for c in registry.get_checks()]
