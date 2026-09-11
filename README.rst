@@ -275,15 +275,15 @@ Per-site time zones
 thread, so Django renders every datetime in local time for whichever site served the
 request. It is the time zone equivalent of what ``SiteID`` does for ``SITE_ID``.
 
-Map each site to a time zone in settings.py. Values may be an IANA key or a ``ZoneInfo``::
+Map each site to a time zone in settings.py. Values must be an IANA key::
 
     MULTISITE_TIME_ZONES = {
         1: "Africa/Dar_es_Salaam",
         2: "America/New_York",
     }
 
-Then add the middleware, which must come AFTER ``DynamicSiteMiddleware``, since that is
-what resolves ``SITE_ID`` for the request:
+
+Add the middleware after ``DynamicSiteMiddleware``
 
 .. code-block::
 
@@ -301,11 +301,10 @@ The lookup itself is available directly::
 
     from multisite.utils import get_multisite_timezone
 
-``get_multisite_timezone()`` returns the IANA key of the time zone for the current
-``SITE_ID``, always as a ``str``. It falls back to ``settings.TIME_ZONE`` and issues a
-``RuntimeWarning`` if ``MULTISITE_TIME_ZONES`` is unset or has no entry for the current
-site, and returns ``settings.TIME_ZONE`` without warning when ``SITE_ID`` is a plain
-integer rather than a ``SiteID``.
+``get_multisite_timezone(site_id=None)`` returns the time zone for ``site_id``, or for the
+current ``SITE_ID`` if not given. It requires ``DynamicSiteTimezoneMiddleware`` in
+``MIDDLEWARE`` and raises ``MultisiteTimezoneError`` otherwise, or if ``site_id`` has no
+entry in ``MULTISITE_TIME_ZONES``. The current site falls back to ``settings.TIME_ZONE``.
 
 Outside a request, in management commands, signal handlers or queue workers, no time zone
 is activated and Django falls back to ``settings.TIME_ZONE``. Wrap the entry point as you
@@ -319,8 +318,8 @@ would with ``SiteID.override()``::
 Three system checks cover the configuration:
 
 * ``multisite.E001`` if ``DynamicSiteTimezoneMiddleware`` is listed before ``DynamicSiteMiddleware``
-* ``multisite.W001`` if ``DynamicSiteMiddleware`` is missing altogether
-* ``multisite.W002`` (deploy only) if ``MULTISITE_TIME_ZONES`` is set but the middleware is not installed
+* ``multisite.E002`` if the middleware is installed but ``MULTISITE_TIME_ZONES`` is missing or empty
+* ``multisite.E003`` if ``DynamicSiteMiddleware`` is missing altogether
 
 
 Development Environments

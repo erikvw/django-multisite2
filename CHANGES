@@ -2,6 +2,15 @@
 Release Notes
 =============
 
+unreleased
+----------
+- tighten up config for multi-timezone support by converting
+  config warnings to exceptions.
+- require timezone middleware and settings dictionary if using
+  get_multisite_timezone().
+- raise on unknown site_id in get_multisite_timezone call.
+- add additional tests
+
 3.0.0
 -----
 - with this release you must run migrations!

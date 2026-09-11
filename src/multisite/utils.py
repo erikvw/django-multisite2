@@ -15,6 +15,8 @@ from django.core.exceptions import (
 from django.http import Http404
 from django.urls import get_callable
 
+from .constants import DYNAMIC_SITE_TIMEZONE_MIDDLEWARE
+from .exceptions import MultisiteTimezoneError
 from .threadlocals import SiteID
 
 if TYPE_CHECKING:
@@ -179,35 +181,41 @@ def get_user_sites(request) -> QuerySet[Site]:
     return sites
 
 
-def get_multisite_timezone() -> str:
-    """Returns the IANA key of the time zone for the current site.
+def get_multisite_timezone(site_id: int | None = None) -> str:
+    """Returns the IANA key of the time zone for the given site.
 
-    Values in `settings.MULTISITE_TIME_ZONES` may be given as a str
-    or as a `ZoneInfo`. Either way a str is returned, since callers
-    pass the result straight to `ZoneInfo()`.
+    Requires `DynamicSiteTimezoneMiddleware` and that the given site
+    exist in settings.MULTISITE_TIME_ZONES.
+
+    See also DynamicSiteTimezoneMiddleware and system checks.
     """
-    timezone = settings.TIME_ZONE
-    if isinstance(settings.SITE_ID, SiteID):
-        site_timezones = getattr(settings, "MULTISITE_TIME_ZONES", {})
-        if not site_timezones:
-            warnings.warn(
-                (
-                    "settings.MULTISITE_TIME_ZONES not set for multisite trial. "
-                    f"Defaulting to {settings.TIME_ZONE}"
-                ),
-                RuntimeWarning,
-                stacklevel=2,
-            )
-        elif not site_timezones.get(settings.SITE_ID):
-            warnings.warn(
-                (
-                    "settings.MULTISITE_TIME_ZONES missing timezone for site "
-                    f"{settings.SITE_ID}. Defaulting to {settings.TIME_ZONE}. "
-                    f"Got {settings.MULTISITE_TIME_ZONES}."
-                ),
-                RuntimeWarning,
-                stacklevel=2,
-            )
-        else:
-            timezone = site_timezones.get(settings.SITE_ID)
-    return str(timezone)
+
+    timezone_data: dict[int | str, str] = getattr(settings, "MULTISITE_TIME_ZONES", {})
+    if DYNAMIC_SITE_TIMEZONE_MIDDLEWARE not in (
+        list(getattr(settings, "MIDDLEWARE", None) or [])
+    ):
+        func_name = sys._getframe().f_code.co_name
+        raise MultisiteTimezoneError(
+            "Middleware needed for function. "
+            f"Add `{DYNAMIC_SITE_TIMEZONE_MIDDLEWARE}` to MIDDLEWARE. "
+            f"Got function `{func_name}`."
+        )
+
+    if isinstance(settings.SITE_ID, SiteID) and not timezone_data:
+        warnings.warn(
+            (
+                "settings.MULTISITE_TIME_ZONES not set for multisite deployment. "
+                f"Defaulting to {settings.TIME_ZONE}. Try adding MULTISITE_TIME_ZONES "
+                "to your settings."
+            ),
+            RuntimeWarning,
+            stacklevel=2,
+        )
+    if site_id is not None and not timezone_data.get(site_id):
+        raise MultisiteTimezoneError(
+            "settings.MULTISITE_TIME_ZONES missing timezone for site_id. "
+            f"Expected one of {timezone_data}. Got site_id={site_id}."
+        )
+
+    site_id: str = settings.SITE_ID if site_id is None else site_id
+    return timezone_data.get(site_id) or settings.TIME_ZONE

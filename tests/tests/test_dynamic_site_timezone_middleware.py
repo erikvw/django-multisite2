@@ -9,6 +9,7 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from multisite import SiteID
+from multisite.exceptions import MultisiteTimezoneError
 from multisite.middleware import DynamicSiteMiddleware, DynamicSiteTimezoneMiddleware
 from multisite.system_checks import (
     DYNAMIC_SITE_MIDDLEWARE,
@@ -43,6 +44,13 @@ class ViewSpy:
         return HttpResponse()
 
 
+middleware_with_tz = [
+    "multisite.middleware.DynamicSiteMiddleware",
+    "multisite.middleware.DynamicSiteTimezoneMiddleware",
+    "django.contrib.sites.middleware.CurrentSiteMiddleware",
+]
+
+
 class GetMultisiteTimezoneTest(TestCase):
     def tearDown(self):
         if isinstance(settings.SITE_ID, SiteID):
@@ -50,43 +58,41 @@ class GetMultisiteTimezoneTest(TestCase):
         timezone.deactivate()
         super().tearDown()
 
-    @override_settings(SITE_ID=1, MULTISITE_TIME_ZONES={1: DAR})
-    def test_plain_site_id_returns_settings_time_zone(self):
-        """A project not using SiteID is unaffected, even if
-        MULTISITE_TIME_ZONES happens to be set.
-        """
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", RuntimeWarning)
-            self.assertEqual(get_multisite_timezone(), settings.TIME_ZONE)
-
     @override_settings(SITE_ID=SiteID(default=1))
-    def test_warns_if_setting_not_defined(self):
-        with self.assertWarns(RuntimeWarning) as cm:
-            time_zone = get_multisite_timezone()
-        self.assertIn("MULTISITE_TIME_ZONES not set", str(cm.warning))
-        self.assertEqual(time_zone, settings.TIME_ZONE)
+    def test_raises_if_setting_not_defined(self):
+        with self.assertRaises(MultisiteTimezoneError) as cm:
+            get_multisite_timezone()
+        self.assertIn("Middleware needed for function", str(cm.exception))
 
     @override_settings(SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={})
-    def test_warns_if_setting_empty(self):
-        with self.assertWarns(RuntimeWarning) as cm:
-            time_zone = get_multisite_timezone()
-        self.assertIn("MULTISITE_TIME_ZONES not set", str(cm.warning))
-        self.assertEqual(time_zone, settings.TIME_ZONE)
+    def test_raises_if_setting_empty(self):
+        with self.assertRaises(MultisiteTimezoneError) as cm:
+            get_multisite_timezone()
+        self.assertIn("Middleware needed for function", str(cm.exception))
 
-    @override_settings(SITE_ID=SiteID(default=99), MULTISITE_TIME_ZONES={1: DAR})
-    def test_warns_if_current_site_not_a_key(self):
-        with self.assertWarns(RuntimeWarning) as cm:
-            time_zone = get_multisite_timezone()
-        self.assertIn("missing timezone for site 99", str(cm.warning))
-        self.assertEqual(time_zone, settings.TIME_ZONE)
+    @override_settings(
+        SITE_ID=SiteID(default=99),
+        MULTISITE_TIME_ZONES={1: DAR},
+        MIDDLEWARE=middleware_with_tz,
+    )
+    def test_raises_if_current_site_not_a_key(self):
+        with self.assertRaises(MultisiteTimezoneError) as cm:
+            get_multisite_timezone(99)
+        self.assertIn("missing timezone for site_id", str(cm.exception))
 
-    @override_settings(SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: DAR})
+    @override_settings(
+        SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: DAR}, MIDDLEWARE=middleware_with_tz
+    )
     def test_returns_timezone_for_current_site(self):
         with warnings.catch_warnings():
             warnings.simplefilter("error", RuntimeWarning)
             self.assertEqual(get_multisite_timezone(), DAR)
 
-    @override_settings(SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: DAR, 2: NYC})
+    @override_settings(
+        SITE_ID=SiteID(default=1),
+        MULTISITE_TIME_ZONES={1: DAR, 2: NYC},
+        MIDDLEWARE=middleware_with_tz,
+    )
     def test_follows_site_id(self):
         """The lookup is dynamic. A SiteID key matches an int key."""
         self.assertEqual(get_multisite_timezone(), DAR)
@@ -95,38 +101,45 @@ class GetMultisiteTimezoneTest(TestCase):
         settings.SITE_ID.reset()
         self.assertEqual(get_multisite_timezone(), DAR)
 
-    @override_settings(SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: DAR, 2: NYC})
+    @override_settings(
+        SITE_ID=SiteID(default=1),
+        MULTISITE_TIME_ZONES={1: DAR, 2: NYC},
+        MIDDLEWARE=middleware_with_tz,
+    )
     def test_follows_site_id_override(self):
         with settings.SITE_ID.override(2):
             self.assertEqual(get_multisite_timezone(), NYC)
         self.assertEqual(get_multisite_timezone(), DAR)
 
-    @override_settings(SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: DAR})
+    @override_settings(
+        SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: DAR}, MIDDLEWARE=middleware_with_tz
+    )
     def test_return_value_is_accepted_by_zoneinfo(self):
         """Callers pass the result straight to ZoneInfo()."""
         self.assertEqual(ZoneInfo(get_multisite_timezone()), ZoneInfo(DAR))
 
-    @override_settings(SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: ZoneInfo(DAR)})
-    def test_normalizes_a_zoneinfo_value_to_str(self):
-        """A ZoneInfo in the settings dict is returned as its IANA key."""
-        time_zone = get_multisite_timezone()
-        self.assertIsInstance(time_zone, str)
-        self.assertEqual(time_zone, DAR)
-        self.assertEqual(ZoneInfo(time_zone), ZoneInfo(DAR))
-
-    @override_settings(SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: DAR})
+    @override_settings(
+        SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: DAR}, MIDDLEWARE=middleware_with_tz
+    )
     def test_returns_str_for_a_str_value(self):
         self.assertIsInstance(get_multisite_timezone(), str)
 
-    @override_settings(SITE_ID=SiteID(default=99), MULTISITE_TIME_ZONES={1: ZoneInfo(DAR)})
+    @override_settings(
+        SITE_ID=SiteID(default=99),
+        MULTISITE_TIME_ZONES={1: ZoneInfo(DAR)},
+        MIDDLEWARE=middleware_with_tz,
+    )
     def test_returns_str_when_falling_back(self):
-        with self.assertWarns(RuntimeWarning):
-            time_zone = get_multisite_timezone()
+        time_zone = get_multisite_timezone()
         self.assertIsInstance(time_zone, str)
         self.assertEqual(time_zone, settings.TIME_ZONE)
 
 
-@override_settings(SITE_ID=SiteID(default=1), MULTISITE_TIME_ZONES={1: DAR, 2: NYC})
+@override_settings(
+    SITE_ID=SiteID(default=1),
+    MULTISITE_TIME_ZONES={1: DAR, 2: NYC},
+    MIDDLEWARE=middleware_with_tz,
+)
 class DynamicSiteTimezoneMiddlewareTest(TestCase):
     def setUp(self):
         self.factory = RequestFactory(host="example.com")
@@ -170,13 +183,6 @@ class DynamicSiteTimezoneMiddlewareTest(TestCase):
     @override_settings(SITE_ID=SiteID(default=99))
     def test_falls_back_to_settings_time_zone_for_unconfigured_site(self):
         view = ViewSpy()
-        with self.assertWarns(RuntimeWarning):
-            DynamicSiteTimezoneMiddleware(view)(self.factory.get("/"))
-        self.assertEqual(view.timezone_name, settings.TIME_ZONE)
-
-    @override_settings(SITE_ID=1)
-    def test_is_a_noop_for_a_plain_site_id(self):
-        view = ViewSpy()
         DynamicSiteTimezoneMiddleware(view)(self.factory.get("/"))
         self.assertEqual(view.timezone_name, settings.TIME_ZONE)
 
@@ -192,6 +198,7 @@ class DynamicSiteTimezoneMiddlewareTest(TestCase):
     MULTISITE_FALLBACK=None,
     ALLOWED_HOSTS=get_test_allowed_hosts("example.com", "anothersite.example", replace=True),
     MULTISITE_TIME_ZONES={1: DAR, 2: NYC},
+    MIDDLEWARE=middleware_with_tz,
 )
 class DynamicSiteTimezoneMiddlewareOrderTest(TestCase):
     """DynamicSiteTimezoneMiddleware must be listed AFTER
@@ -224,9 +231,7 @@ class DynamicSiteTimezoneMiddlewareOrderTest(TestCase):
         """
         view = ViewSpy()
         chain = DynamicSiteTimezoneMiddleware(DynamicSiteMiddleware(view))
-        with self.assertWarns(RuntimeWarning) as cm:
-            chain(RequestFactory(host="anothersite.example").get("/"))
-        self.assertIn("missing timezone for site 0", str(cm.warning))
+        chain(RequestFactory(host="anothersite.example").get("/"))
         self.assertEqual(view.timezone_name, settings.TIME_ZONE)
 
 
@@ -261,9 +266,9 @@ class MultisiteMiddlewareCheckTest(TestCase):
         self.assertIn("must be listed after", messages[0].msg)
 
     @override_settings(MIDDLEWARE=[DYNAMIC_SITE_TIMEZONE_MIDDLEWARE])
-    def test_timezone_middleware_without_dynamic_site_middleware_warns(self):
+    def test_timezone_middleware_without_dynamic_site_middleware_error(self):
         messages = multisite_middleware_check(None)
-        self.assertEqual(self.ids(messages), ["multisite.W001"])
+        self.assertEqual(self.ids(messages), ["multisite.E003"])
 
     @override_settings(MIDDLEWARE=[DYNAMIC_SITE_MIDDLEWARE])
     def test_silent_if_timezone_middleware_not_used(self):
@@ -280,15 +285,25 @@ class MultisiteMiddlewareCheckTest(TestCase):
     def test_setting_check_silent_when_middleware_installed(self):
         self.assertEqual(multisite_timezone_setting_check(None), [])
 
-    @override_settings(MIDDLEWARE=[DYNAMIC_SITE_MIDDLEWARE], MULTISITE_TIME_ZONES={1: DAR})
-    def test_setting_check_warns_when_middleware_missing(self):
-        messages = multisite_timezone_setting_check(None)
-        self.assertEqual(self.ids(messages), ["multisite.W002"])
-        self.assertIn("no effect", messages[0].msg)
-
     @override_settings(MIDDLEWARE=[DYNAMIC_SITE_MIDDLEWARE], MULTISITE_TIME_ZONES={})
     def test_setting_check_silent_when_setting_empty(self):
         self.assertEqual(multisite_timezone_setting_check(None), [])
+
+    @override_settings(MIDDLEWARE=[DYNAMIC_SITE_MIDDLEWARE, DYNAMIC_SITE_TIMEZONE_MIDDLEWARE])
+    def test_setting_check_error_when_middleware_installed_and_setting_missing(self):
+        self.assertFalse(hasattr(settings, "MULTISITE_TIME_ZONES"))
+        messages = multisite_timezone_setting_check(None)
+        self.assertEqual(self.ids(messages), ["multisite.E002"])
+        self.assertIn("MULTISITE_TIME_ZONES is missing or not set", messages[0].msg)
+
+    @override_settings(
+        MIDDLEWARE=[DYNAMIC_SITE_MIDDLEWARE, DYNAMIC_SITE_TIMEZONE_MIDDLEWARE],
+        MULTISITE_TIME_ZONES={},
+    )
+    def test_setting_check_error_when_middleware_installed_and_setting_empty(self):
+        messages = multisite_timezone_setting_check(None)
+        self.assertEqual(self.ids(messages), ["multisite.E002"])
+        self.assertIn("MULTISITE_TIME_ZONES is missing or not set", messages[0].msg)
 
     def test_checks_are_registered(self):
         registered = [c.__name__ for c in registry.get_checks()]
