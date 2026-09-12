@@ -2,8 +2,8 @@
 Release Notes
 =============
 
-unreleased
-----------
+3.1.0
+-----
 - tighten up config for multi-timezone support by converting
   config warnings to exceptions.
 - require timezone middleware and settings dictionary if using
